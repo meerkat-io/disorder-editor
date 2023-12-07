@@ -1,0 +1,15 @@
+schema: disorder
+
+version: v1
+
+package: test
+
+messages:
+  number:
+    value: int
+
+services:
+  math_service:
+    increase:
+      input: int
+      output: int

@@ -1,0 +1,59 @@
+schema: disorder
+
+version: v1
+
+package: test
+
+import: 
+  - sub_schema.yaml
+
+messages:
+  object:
+    bool_field: bool
+    int_field: int
+    string_field: string
+    bytes_fields: bytes
+    enum_field: color
+    time_field: timestamp
+    obj_field: test.number
+    int_array: array[int]
+    int_map: map[int]
+    obj_array: array[test.number]
+    obj_map: map[test.number]
+    nested: map[map[array[array[map[color]]]]]
+
+enums:
+  color:
+    - red
+    - green
+    - blue
+
+services:
+  primary_service:
+    print_object:
+      input: object
+      output: object
+
+    print_imported_object:
+      input: test.number
+      output: test.number
+
+    print_time:
+      input: timestamp
+      output: timestamp
+
+    print_array:
+      input: array[int]
+      output: array[int]
+
+    print_enum:
+      input: color
+      output: color
+
+    print_map:
+      input: map[string]
+      output: map[string]
+
+    print_nested:
+      input: map[map[array[array[map[color]]]]]
+      output: map[map[array[array[map[color]]]]]

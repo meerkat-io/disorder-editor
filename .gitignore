@@ -12,6 +12,7 @@ npm-debug.log
 
 # Ignore VS Code workspace settings
 .vscode/
+.vscode-test/
 
 # Ignore compiled output directory
 out/

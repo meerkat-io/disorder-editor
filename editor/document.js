@@ -1,20 +1,20 @@
-/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]*/
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 const vscode = require('vscode')
-const _editor = require('./editor')
-const _edit = require('./edit')
+const editor = require('./editor')
+const edit = require('./edit')
 
 /**
  * @class
  * @constructor
  * @public
  * @property {vscode.Uri} uri
- * @property {_editor.EditorProvider} editorProvider
+ * @property {editor.EditorProvider} editorProvider
  * @property {Uint8Array} documentData
  * @property {boolean} disposed
  * @property {vscode.Disposable[]} disposables
- * @property {_edit.Edit[]} edits
- * @property {_edit.Edit[]} savedEdits
+ * @property {edit.Edit[]} edits
+ * @property {edit.Edit[]} savedEdits
  * @property {vscode.EventEmitter<void>} onDidDispose
  * @property {vscode.EventEmitter<{content?: Uint8Array, edits: edit.Edit[]}>} onDidChangeDocument
  * @property {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>} onDidChange
@@ -23,7 +23,7 @@ class Document {
 
     /**
      * @param {vscode.Uri} uri
-     * @param {_editor.EditorProvider} editorProvider
+     * @param {editor.EditorProvider} editorProvider
      */
     constructor(uri, editorProvider) {
 		this.uri = uri;
@@ -48,8 +48,8 @@ class Document {
 	/**
 	 * @param {vscode.Uri} uri
 	 * @param {string | undefined} backupId
-	 * @param {_editor.EditorProvider} editorProvider
-	 * @returns {Promise<Document | PromiseLike<Document>>}
+	 * @param {editor.EditorProvider} editorProvider
+	 * @returns {Promise<Document>}
 	 */
 	static async create(uri, backupId, editorProvider) {
 		// If we have a backup, read that. Otherwise read the resource from the workspace
@@ -83,7 +83,7 @@ class Document {
     }
 
 	/**
-	 * @param {_edit.Edit} edit
+	 * @param {edit.Edit} edit
 	 */
 	edit(edit) {
 		this.edits.push(edit);

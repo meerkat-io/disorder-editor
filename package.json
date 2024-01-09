@@ -1,7 +1,7 @@
 {
   "name": "disorder-editor",
   "displayName": "Disorder Editor",
-  "description": "Disorder schema and data editor",
+  "description": "Disorder data editor",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.85.0"
@@ -13,20 +13,22 @@
   "main": "./extension.js",
   "contributes": {
     "customEditors": [
-			{
-				"viewType": "disorder.data",
-				"displayName": "Disorder Data Editor",
-				"selector": [
-					{
-						"filenamePattern": "*.dod"
-					}
-				]
-			}
-		],
-    "commands": [{
-      "command": "disorder-editor.helloWorld",
-      "title": "Hello World"
-    }]
+      {
+        "viewType": "disorder.data",
+        "displayName": "Disorder Data Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.dod"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "disorder-editor.hey",
+        "title": "How are you"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
@@ -34,12 +36,13 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
-    "eslint": "^8.54.0",
-    "typescript": "^5.3.2",
+    "@types/vscode": "^1.85.0",
     "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8"
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.54.0",
+    "eslint-plugin-jsdoc": "^48.0.2",
+    "typescript": "^5.3.2"
   }
 }

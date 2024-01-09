@@ -3,6 +3,7 @@
   "displayName": "Disorder Editor",
   "description": "Disorder data editor",
   "version": "0.0.1",
+  "publisher": "meerkat.io",
   "engines": {
     "vscode": "^1.85.0"
   },

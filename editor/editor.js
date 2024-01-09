@@ -9,7 +9,8 @@ const document = require('./document')
  * @public
  * @property {vscode.ExtensionContext} context
  * @property {Set<{resource: string, webview: vscode.WebviewPanel}>} webviews
- * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<document.Document>>} onDidChangeCustomDocument
+ * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<document.Document>>} onDidChange
+ * @property {vscode.CustomDocumentEditEvent<document.Document>} onDidChangeCustomDocument
  * @property {number} requestId
  * @property {Map<number, (response: any) => void>} callbacks
  */
@@ -20,7 +21,8 @@ class EditorProvider {
 	constructor(context) {
 		this.context = context;
 		this.webviews = new Set();
-		this.onDidChangeCustomDocument = new vscode.EventEmitter();
+		this.onDidChange = new vscode.EventEmitter();
+		this.onDidChangeCustomDocument = this.onDidChange.event;
 		this.requestId = 1;
 		this.callbacks = new Map();
 	}
@@ -71,22 +73,17 @@ class EditorProvider {
 
 	/**
 	 * 
-	 * @param {document.Document} _doc 
+	 * @param {document.Document} doc 
 	 */
-	async getFileData(_doc) {
-		return new Uint8Array();
+	async getFileData(doc) {
+		const webviewsForDocument = Array.from(this.getWebviews(doc.uri));
+		if (!webviewsForDocument.length) {
+			throw new Error('Could not find webview to save for');
+		}
+		const panel = webviewsForDocument[0];
+		const response = await this.postMessage(panel, 'file', {});
+		return new Uint8Array(response);
 	}
-
-	/*
-	getFileData(Document): async () => {
-					const webviewsForDocument = Array.from(this.webviews.get(document.uri));
-					if (!webviewsForDocument.length) {
-						throw new Error('Could not find webview to save for');
-					}
-					const panel = webviewsForDocument[0];
-					const response = await this.postMessageWithResponse<number[]>(panel, 'getFileData', {});
-					return new Uint8Array(response);
-				}*/
 
 	//#region CustomEditorProvider
 	/**
@@ -100,11 +97,7 @@ class EditorProvider {
 
 		const listeners = [];
 		listeners.push(doc.onDidChange.event(e => {
-			// Tell VS Code that the document has been edited by the use.
-			this.onDidChangeCustomDocument.fire({
-				doc,
-				...e,
-			});
+			this.onDidChange.fire({ doc, ...e });
 		}));
 
 		listeners.push(doc.onDidChangeDocument.event(e => {
@@ -200,9 +193,9 @@ class EditorProvider {
 				-->
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+				<!--
 				<link href="${cssUri}" rel="stylesheet"/>
-
+				-->
 				<title>Disorder Editor</title>
 			</head>
 			<body>
@@ -247,7 +240,7 @@ class EditorProvider {
 	postMessage(panel, type, body) {
 		const requestId = this.requestId++;
 		const promise = new Promise(resolve => this.callbacks.set(requestId, resolve));
-		panel.webview.postMessage({ type: type, requestId: requestId, body: body });
+		panel.webview.postMessage({ type, requestId, body });
 		return promise;
 	}
 

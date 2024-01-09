@@ -12,6 +12,17 @@
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
+    "customEditors": [
+			{
+				"viewType": "disorder.data",
+				"displayName": "Disorder Data Editor",
+				"selector": [
+					{
+						"filenamePattern": "*.dod"
+					}
+				]
+			}
+		],
     "commands": [{
       "command": "disorder-editor.helloWorld",
       "title": "Hello World"

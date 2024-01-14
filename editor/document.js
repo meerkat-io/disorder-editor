@@ -5,8 +5,6 @@ const editor = require('./editor')
 const edit = require('./edit')
 
 /**
- * @class
- * @constructor
  * @public
  * @property {vscode.Uri} uri
  * @property {editor.EditorProvider} editorProvider

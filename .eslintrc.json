@@ -4,7 +4,9 @@
 		"commonjs": true,
 		"es6": true,
 		"node": true,
-		"mocha": true
+		"mocha": true,
+		"es2020": true,
+		"jest": true
 	},
 	"parserOptions": {
 		"ecmaVersion": 2022,
@@ -24,7 +26,8 @@
 		"jsdoc/no-undefined-types": 1
 	},
 	"plugins": [
-		"jsdoc"
+		"jsdoc",
+		"jest"
 	],
 	"globals": {
 		"Generator": true,

@@ -1,6 +1,4 @@
 /**
- * @class
- * @constructor
  * @public
  */
 class Edit {}

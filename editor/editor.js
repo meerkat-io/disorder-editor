@@ -4,8 +4,6 @@ const vscode = require('vscode')
 const document = require('./document')
 
 /**
- * @class
- * @constructor
  * @public
  * @property {vscode.ExtensionContext} context
  * @property {Set<{resource: string, webview: vscode.WebviewPanel}>} webviews
@@ -44,35 +42,6 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {vscode.Uri} uri
-	 * @param {vscode.WebviewPanel} webview 
-	 */
-	addWebview(uri, webview) {
-		const entry = {
-			resource: uri.toString(),
-			webview: webview
-		}
-		this.webviews.add(entry);
-		webview.onDidDispose(() => {
-			this.webviews.delete(entry);
-		});
-	}
-
-	/**
-	 * @param {vscode.Uri} uri
-	 * @returns {Iterable<vscode.WebviewPanel>}
-	 */
-	*getWebviews(uri) {
-		const key = uri.toString();
-		for (const entry of this.webviews) {
-			if (entry.resource === key) {
-				yield entry.webview;
-			}
-		}
-	}
-
-	/**
-	 * 
 	 * @param {document.Document} doc 
 	 */
 	async getFileData(doc) {
@@ -169,7 +138,38 @@ class EditorProvider {
 	//#endregion
 
 	/**
+	 * @param {vscode.Uri} uri
+	 * @param {vscode.WebviewPanel} webview
+	 * @private
+	 */
+	addWebview(uri, webview) {
+		const entry = {
+			resource: uri.toString(),
+			webview: webview
+		}
+		this.webviews.add(entry);
+		webview.onDidDispose(() => {
+			this.webviews.delete(entry);
+		});
+	}
+
+	/**
+	 * @param {vscode.Uri} uri
+	 * @returns {Iterable<vscode.WebviewPanel>}
+	 * @private
+	 */
+	*getWebviews(uri) {
+		const key = uri.toString();
+		for (const entry of this.webviews) {
+			if (entry.resource === key) {
+				yield entry.webview;
+			}
+		}
+	}
+
+	/**
 	 * @param {vscode.WebviewPanel} webviewPanel
+	 * @private
 	 */
 	getHtmlForWebview(webviewPanel) {
 		const webview = webviewPanel.webview;
@@ -209,6 +209,7 @@ class EditorProvider {
 
 	/**
 	 * @returns {string}
+	 * @private
 	 */
 	getNonce() {
 		let text = '';
@@ -221,6 +222,7 @@ class EditorProvider {
 
 	/**
 	 * @param {vscode.Disposable[]} disposables 
+	 * @private
 	 */
 	disposeAll(disposables) {
 		while (disposables.length) {
@@ -236,6 +238,7 @@ class EditorProvider {
 	 * @param {vscode.WebviewPanel} panel 
 	 * @param {string} type 
 	 * @param {*} body 
+	 * @private
 	 */
 	postMessage(panel, type, body) {
 		const requestId = this.requestId++;
@@ -248,7 +251,7 @@ class EditorProvider {
 	 * @param {vscode.WebviewPanel} webviewPanel 
 	 * @param {document.Document} document 
 	 * @param {{type: string, requestId: number, body: any}} message 
-	 * @returns 
+	 * @private
 	 */
 	onMessage(webviewPanel, document, message) {
 		switch (message.type) {

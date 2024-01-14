@@ -1,0 +1,9 @@
+schema: disorder
+
+version: v1
+
+package: test
+
+messages:
+  sub:
+    value: int

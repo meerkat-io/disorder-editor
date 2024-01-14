@@ -4,7 +4,7 @@ version: v1
 
 package: test
 
-import: 
+import:
   - sub_schema.yaml
 
 messages:
@@ -15,11 +15,11 @@ messages:
     bytes_fields: bytes
     enum_field: color
     time_field: timestamp
-    obj_field: test.number
+    obj_field: sub
     int_array: array[int]
     int_map: map[int]
-    obj_array: array[test.number]
-    obj_map: map[test.number]
+    obj_array: array[sub]
+    obj_map: map[sub]
     nested: map[map[array[array[map[color]]]]]
 
 enums:

@@ -1,14 +1,14 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 const vscode = require('vscode')
-const document = require('./document')
+const { Document } = require('./document')
 
 /**
  * @public
  * @property {vscode.ExtensionContext} context
  * @property {Set<{resource: string, webview: vscode.WebviewPanel}>} webviews
- * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<document.Document>>} onDidChange
- * @property {vscode.CustomDocumentEditEvent<document.Document>} onDidChangeCustomDocument
+ * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>} onDidChange
+ * @property {vscode.CustomDocumentEditEvent<Document>} onDidChangeCustomDocument
  * @property {number} requestId
  * @property {Map<number, (response: any) => void>} callbacks
  */
@@ -42,7 +42,7 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {document.Document} doc 
+	 * @param {Document} doc 
 	 */
 	async getFileData(doc) {
 		const webviewsForDocument = Array.from(this.getWebviews(doc.uri));
@@ -59,10 +59,10 @@ class EditorProvider {
 	 * @param {vscode.Uri} uri 
 	 * @param {{backupId?: string}} openContext 
 	 * @param {vscode.CancellationToken} _token 
-	 * @returns {Promise<document.Document>}
+	 * @returns {Promise<Document>}
 	 */
 	async openCustomDocument(uri, openContext, _token) {
-		const doc = await document.Document.create(uri, openContext.backupId, this);
+		const doc = await Document.create(uri, openContext.backupId, this);
 
 		const listeners = [];
 		listeners.push(doc.onDidChange.event(e => {
@@ -84,7 +84,7 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {document.Document} document 
+	 * @param {Document} document 
 	 * @param {vscode.WebviewPanel} webviewPanel 
 	 * @param {vscode.CancellationToken} _token
 	 * @returns {Promise<void>}
@@ -99,7 +99,7 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {document.Document} document 
+	 * @param {Document} document 
 	 * @param {vscode.CancellationToken} cancellation 
 	 * @returns {Thenable<void>}
 	 */
@@ -108,7 +108,7 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {document.Document} document 
+	 * @param {Document} document 
 	 * @param {vscode.Uri} destination 
 	 * @param {vscode.CancellationToken} cancellation 
 	 * @returns {Thenable<void>}
@@ -118,7 +118,7 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {document.Document} document 
+	 * @param {Document} document 
 	 * @param {vscode.CancellationToken} cancellation 
 	 * @returns {Thenable<void>}
 	 */
@@ -127,7 +127,7 @@ class EditorProvider {
 	}
 
 	/**
-	 * @param {document.Document} document 
+	 * @param {Document} document 
 	 * @param {vscode.CustomDocumentBackupContext} context 
 	 * @param {vscode.CancellationToken} cancellation 
 	 * @returns {Thenable<vscode.CustomDocumentBackup>}
@@ -249,7 +249,7 @@ class EditorProvider {
 
 	/**
 	 * @param {vscode.WebviewPanel} webviewPanel 
-	 * @param {document.Document} document 
+	 * @param {Document} document 
 	 * @param {{type: string, requestId: number, body: any}} message 
 	 * @private
 	 */

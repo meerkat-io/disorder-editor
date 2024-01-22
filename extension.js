@@ -1,11 +1,11 @@
 const vscode = require('vscode');
-const editor = require('./editor/editor');
+const { EditorProvider } = require('./editor/editor');
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	context.subscriptions.push(editor.EditorProvider.register(context));
+	context.subscriptions.push(EditorProvider.register(context));
 }
 
 // This method is called when your extension is deactivated

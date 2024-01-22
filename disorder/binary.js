@@ -1,3 +1,29 @@
+const fs = require('fs');
+const { Type } = require('./schema');
+
+/**
+ * Tag is used in disorder binary stream 
+ * to indicate the type of the following value.
+ */
+const Tag = {
+    Undefined: 0,
+
+    Bool: 1,
+    Int: 2,
+    Long: 3,
+    Float: 4,
+    Double: 5,
+    Bytes: 6,
+
+    String: 11,
+    Timestamp: 12,
+    Enum: 13,
+
+    ArrayStart: 21,
+    ArrayEnd: 22,
+    ObjectStart: 23,
+    ObjectEnd: 24
+}
 
 /**
  * @public
@@ -11,10 +37,19 @@
  * @property {boolean} floatLE
  */
 class ByteArray {
-    constructor() {
-        this.buffer = new Uint8Array(1024);
-        this.readOffset = 0;
-        this.writeOffset = 0;
+    /**
+     * @param {Uint8Array | undefined} buffer
+     */
+    constructor(buffer = undefined) {
+        if (buffer) {
+            this.buffer = buffer;
+            this.readOffset = 0;
+            this.writeOffset = buffer.length;
+        } else {
+            this.buffer = new Uint8Array(1024);
+            this.readOffset = 0;
+            this.writeOffset = 0;
+        }
 
         this.f32 = new Float32Array([-0]);
         this.f32Bytes = new Uint8Array(this.f32.buffer);
@@ -251,10 +286,26 @@ class ByteArray {
 
 /**
  * @public
+ * @property {ByteArray} bytes
  */
 class Reader {
-    // static fromWriter
-    // static fromFile
+    /**
+     * @param {Writer} writer 
+     * @returns 
+     */
+    static fromWriter(writer) {
+        return new Reader(writer.bytes);
+    }
+
+    /**
+     * @param {string} file 
+     * @returns 
+     */
+    static fromFile(file) {
+        const buffer = fs.readFileSync(file);
+        return new Reader(new ByteArray(buffer));
+    }
+
     /**
      * @param {ByteArray} bytes 
      */
@@ -262,14 +313,243 @@ class Reader {
         this.bytes = bytes;
         this.bytes.readOffset = 0;
     }
+
+    /**
+     * @param {number | undefined} tag 
+     * @returns {any}
+     */
+    read(tag = undefined) {
+        tag = tag || this.readTag();
+
+        let length = 0;
+        let elementTag = Tag.Undefined;
+        switch (tag) {
+            case Tag.Bool:
+                return this.bytes.readBoolean();
+
+            case Tag.Int:
+                return this.bytes.readInt();
+
+            case Tag.Long:
+                return this.bytes.readLong();
+
+            case Tag.Float:
+                return this.bytes.readFloat();
+
+            case Tag.Double:
+                return this.bytes.readDouble();
+
+            case Tag.Bytes:
+                length = this.bytes.readInt();
+                return this.bytes.readBytes(length);
+
+            case Tag.String:
+                length = this.bytes.readInt();
+                const bytes = this.bytes.readBytes(length);
+                return new TextDecoder().decode(bytes);
+
+            case Tag.Timestamp:
+                const milliseconds = this.bytes.readLong();
+                return new Date(Number(milliseconds));
+
+            case Tag.Enum:
+                return this.readName();
+
+            case Tag.ArrayStart:
+                const array = new Array();
+                elementTag = this.readTag();
+                while (elementTag !== Tag.ArrayEnd) {
+                    array.push(this.read(elementTag));
+                    elementTag = this.readTag();
+                }
+                return array;
+
+            case Tag.ObjectStart:
+                const map = new Map();
+                elementTag = this.readTag();
+                while (elementTag !== Tag.ObjectEnd) {
+                    const key = this.readName();
+                    const value = this.read(elementTag);
+                    map.set(key, value);
+                    elementTag = this.readTag();
+                }
+                return map;
+
+            default:
+                throw new Error(`unexpected tag ${tag}`);
+        }
+    }
+
+    /**
+     * @private
+     * @returns {string}
+     */
+    readName() {
+        const length = this.bytes.readByte();
+        const bytes = this.bytes.readBytes(length);
+        return new TextDecoder().decode(bytes);
+    }
+
+    /**
+     * @private
+     * @returns {number}
+     */
+    readTag() {
+        return this.bytes.readByte();
+    }
 }
 
 /**
  * @public
+ * @property {ByteArray} bytes
  */
 class Writer {
+
     constructor() {
         this.bytes = new ByteArray();
+    }
+
+    /**
+     * @param {any} value 
+     * @param {Type} type 
+     * @param {string | undefined} name 
+     */
+    write(value, type, name = undefined) {
+        if (name) {
+            this.writeName(name);
+        }
+        switch (type.type) {
+            case Type.BOOL:
+                if (typeof value !== 'boolean') {
+                    throw new Error(`value ${value} is not a boolean`);
+                }
+                this.writeTag(Tag.Bool);
+                this.bytes.writeBoolean(value);
+                break;
+
+            case Type.INT:
+                if (typeof value !== 'number') {
+                    throw new Error(`value ${value} is not a integer`);
+                }
+                this.writeTag(Tag.Int);
+                this.bytes.writeInt(value);
+                break;
+
+            case Type.LONG:
+                if (typeof value !== 'bigint') {
+                    throw new Error(`value ${value} is not a long (bigint)`);
+                }
+                this.writeTag(Tag.Long);
+                this.bytes.writeLong(value);
+                break;
+
+            case Type.FLOAT:
+                if (typeof value !== 'number') {
+                    throw new Error(`value ${value} is not a float`);
+                }
+                this.writeTag(Tag.Float);
+                this.bytes.writeFloat(value);
+                break;
+
+            case Type.DOUBLE:
+                if (typeof value !== 'number') {
+                    throw new Error(`value ${value} is not a double`);
+                }
+                this.writeTag(Tag.Double);
+                this.bytes.writeDouble(value);
+                break;
+
+            case Type.BYTES:
+                if (!(value instanceof Uint8Array)) {
+                    throw new Error(`value ${value} is not a bytes (Uint8Array)`);
+                }
+                this.writeTag(Tag.Bytes);
+                this.bytes.writeInt(value.length);
+                this.bytes.writeBytes(value);
+                break;
+
+            case Type.STRING:
+                if (typeof value !== 'string') {
+                    throw new Error(`value ${value} is not a string`);
+                }
+                this.writeTag(Tag.String);
+                this.bytes.writeInt(value.length);
+                this.bytes.writeBytes(new TextEncoder().encode(value));
+                break;
+
+            case Type.TIMESTAMP:
+                if (!(value instanceof Date)) {
+                    throw new Error(`value ${value} is not a timestamp (Date)`);
+                }
+                this.writeTag(Tag.Timestamp);
+                this.bytes.writeLong(BigInt(value.getTime()));
+                break;
+
+            case Type.ENUM:
+                if (typeof value !== 'string') {
+                    throw new Error(`value ${value} is not a enum`);
+                }
+                this.writeTag(Tag.Enum);
+                this.writeName(value);
+                break;
+            
+            case Type.ARRAY:
+                if (!(value instanceof Array)) {
+                    throw new Error(`value ${value} is not a array`);
+                }
+                this.writeTag(Tag.ArrayStart);
+                for (const element of value) {
+                    this.write(element, type.element);
+                }
+                this.writeTag(Tag.ArrayEnd);
+                break;
+
+            case Type.MAP:
+                if (!(value instanceof Map)) {
+                    throw new Error(`value ${value} is not a map`);
+                }
+                this.writeTag(Tag.ObjectStart);
+                for (const [key, element] of value.entries()) {
+                    this.write(element, type.element, key);
+                }
+                this.writeTag(Tag.ObjectEnd);
+                break;
+
+            case Type.STRUCT:
+                if (!(value instanceof Map)) {
+                    throw new Error(`value ${value} is not a struct`);
+                }
+                this.writeTag(Tag.ObjectStart);
+                for (const [key, element] of type.children) {
+                    if (value.has(key)) {
+                        this.write(value.get(key), element, key);
+                    }
+                }
+                this.writeTag(Tag.ObjectEnd);
+                break;
+
+            default:
+                throw new Error(`unsupported type ${type}`);
+        }
+    }
+
+    /**
+     * @param {string} name 
+     */
+    writeName(name) {
+        const bytes = new TextEncoder().encode(name);
+        if (bytes.length > 255) {
+            throw new Error('name too long');
+        }
+        this.bytes.writeByte(bytes.length);
+        this.bytes.writeBytes(bytes);
+    }
+
+    /**
+     * @param {number} tag 
+     */
+    writeTag(tag) {
+        this.bytes.writeByte(tag);
     }
 }
 

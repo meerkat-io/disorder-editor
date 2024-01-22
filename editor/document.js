@@ -1,8 +1,8 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 const vscode = require('vscode')
-const editor = require('./editor')
-const edit = require('./edit')
+const { EditorProvider } = require('./editor')
+const { Edit } = require('./edit')
 
 /**
  * @public
@@ -11,25 +11,25 @@ const edit = require('./edit')
  * @property {Uint8Array} documentData
  * @property {boolean} disposed
  * @property {vscode.Disposable[]} disposables
- * @property {edit.Edit[]} edits
- * @property {edit.Edit[]} savedEdits
+ * @property {Edit[]} edits
+ * @property {Edit[]} savedEdits
  * @property {vscode.EventEmitter<void>} onDidDispose
  * @property {vscode.EventEmitter<{content?: Uint8Array, edits: edit.Edit[]}>} onDidChangeDocument
  * @property {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>} onDidChange
  */
 class Document {
 
-    /**
-     * @param {vscode.Uri} uri
-     * @param {editor.EditorProvider} editorProvider
-     */
-    constructor(uri, editorProvider) {
+	/**
+	 * @param {vscode.Uri} uri
+	 * @param {EditorProvider} editorProvider
+	 */
+	constructor(uri, editorProvider) {
 		this.uri = uri;
-        this.editorProvider = editorProvider;
-        this.documentData = undefined;
+		this.editorProvider = editorProvider;
+		this.documentData = undefined;
 
-        this.disposed  = false;
-        this.disposables = [];
+		this.disposed = false;
+		this.disposables = [];
 		this.edits = [];
 		this.savedEdits = [];
 
@@ -41,12 +41,12 @@ class Document {
 
 		this.onDidChange = new vscode.EventEmitter();
 		this.register(this.onDidChange);
-    }
+	}
 
 	/**
 	 * @param {vscode.Uri} uri
 	 * @param {string | undefined} backupId
-	 * @param {editor.EditorProvider} editorProvider
+	 * @param {EditorProvider} editorProvider
 	 * @returns {Promise<Document>}
 	 */
 	static async create(uri, backupId, editorProvider) {
@@ -62,26 +62,26 @@ class Document {
 			return;
 		}
 		this.disposed = true;
-        this.disposables.forEach(disposable => {
-            disposable.dispose();
-        });
-        this.disposables = [];
+		this.disposables.forEach(disposable => {
+			disposable.dispose();
+		});
+		this.disposables = [];
 		this.onDidDispose.fire();
 	}
 
-    /**
-     * @param {vscode.Disposable} value
-     */
-    register(value){
-        if (this.disposed) {
-            value.dispose();
-        } else {
-            this.disposables.push(value);
-        }
-    }
+	/**
+	 * @param {vscode.Disposable} value
+	 */
+	register(value) {
+		if (this.disposed) {
+			value.dispose();
+		} else {
+			this.disposables.push(value);
+		}
+	}
 
 	/**
-	 * @param {edit.Edit} edit
+	 * @param {Edit} edit
 	 */
 	edit(edit) {
 		this.edits.push(edit);
@@ -102,7 +102,7 @@ class Document {
 	}
 
 	/**
-     * @returns {Promise<Uint8Array>}
+	 * @returns {Promise<Uint8Array>}
 	 */
 	async readFile() {
 		if (this.uri.scheme === 'untitled') {
@@ -113,7 +113,7 @@ class Document {
 
 	/**
 	 * @param {vscode.CancellationToken} cancellation
-     * @returns {Promise<void>}
+	 * @returns {Promise<void>}
 	 */
 	async save(cancellation) {
 		await this.saveAs(this.uri, cancellation);
@@ -122,8 +122,8 @@ class Document {
 
 	/**
 	 * @param {vscode.Uri} targetResource
-     * @param {vscode.CancellationToken} cancellation
-     * @returns {Promise<void>}
+	 * @param {vscode.CancellationToken} cancellation
+	 * @returns {Promise<void>}
 	 */
 	async saveAs(targetResource, cancellation) {
 		const fileData = await this.editorProvider.getFileData(this);

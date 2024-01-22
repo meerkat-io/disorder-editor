@@ -1,7 +1,8 @@
-const binary = require('../disorder/binary');
+// @ts-nocheck
+const { ByteArray } = require('../disorder/binary');
 
 test('write then read boolean to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     bytes.writeBoolean(true);
     bytes.writeBoolean(false);
     bytes.writeBoolean(true);
@@ -13,7 +14,7 @@ test('write then read boolean to binary', () => {
 });
 
 test('write then read byte to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     bytes.writeByte(0);
     bytes.writeByte(1);
     bytes.writeByte(255);
@@ -25,7 +26,7 @@ test('write then read byte to binary', () => {
 });
 
 test('write then read bytes to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     const data = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]);
     bytes.writeBytes(data);
     expect(bytes.writeOffset).toBe(8);
@@ -34,7 +35,7 @@ test('write then read bytes to binary', () => {
 });
 
 test('write then read int to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     bytes.writeInt(0);
     bytes.writeInt(1);
     bytes.writeInt(-1);
@@ -50,7 +51,7 @@ test('write then read int to binary', () => {
 });
 
 test('write then read long to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     bytes.writeLong(0n);
     bytes.writeLong(1n);
     bytes.writeLong(-1n);
@@ -66,7 +67,7 @@ test('write then read long to binary', () => {
 });
 
 test('write then read float to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     bytes.writeFloat(0.5);
     bytes.writeFloat(-0.5);
     bytes.writeFloat(-3.25);
@@ -80,7 +81,7 @@ test('write then read float to binary', () => {
 });
 
 test('write then read double to binary', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     bytes.writeDouble(0.5);
     bytes.writeDouble(-0.5);
     bytes.writeDouble(3.25);
@@ -94,7 +95,7 @@ test('write then read double to binary', () => {
 });
 
 test('bytearray should resize automatically', () => {
-    const bytes = new binary.ByteArray();
+    const bytes = new ByteArray();
     for (let i = 0; i < 512; i++) {
         bytes.writeInt(i);
     }

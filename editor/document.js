@@ -7,14 +7,14 @@ const { Edit } = require('./edit')
 /**
  * @public
  * @property {vscode.Uri} uri
- * @property {editor.EditorProvider} editorProvider
+ * @property {EditorProvider} editorProvider
  * @property {Uint8Array} documentData
  * @property {boolean} disposed
  * @property {vscode.Disposable[]} disposables
  * @property {Edit[]} edits
  * @property {Edit[]} savedEdits
  * @property {vscode.EventEmitter<void>} onDidDispose
- * @property {vscode.EventEmitter<{content?: Uint8Array, edits: edit.Edit[]}>} onDidChangeDocument
+ * @property {vscode.EventEmitter<{content?: Uint8Array, edits: Edit[]}>} onDidChangeDocument
  * @property {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>} onDidChange
  */
 class Document {
@@ -24,21 +24,51 @@ class Document {
 	 * @param {EditorProvider} editorProvider
 	 */
 	constructor(uri, editorProvider) {
+		/**
+		 * @type {vscode.Uri}
+		 */
 		this.uri = uri;
+		/**
+		 * @type {EditorProvider}
+		 */
 		this.editorProvider = editorProvider;
+		/**
+		 * @type {Uint8Array}
+		 */
 		this.documentData = undefined;
 
+		/**
+		 * @type {boolean}
+		 */
 		this.disposed = false;
+		/**
+		 * @type {vscode.Disposable[]}
+		 */
 		this.disposables = [];
+		/**
+		 * @type {Edit[]}
+		 */
 		this.edits = [];
+		/**
+		 * @type {Edit[]}
+		 */
 		this.savedEdits = [];
 
+		/**
+		 * @type {vscode.EventEmitter<void>}
+		 */
 		this.onDidDispose = new vscode.EventEmitter();
 		this.register(this.onDidDispose);
 
+		/**
+		 * @type {vscode.EventEmitter<{content?: Uint8Array, edits: Edit[]}>}
+		 */
 		this.onDidChangeDocument = new vscode.EventEmitter();
 		this.register(this.onDidChangeDocument);
 
+		/**
+		 * @type {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>}
+		 */
 		this.onDidChange = new vscode.EventEmitter();
 		this.register(this.onDidChange);
 	}

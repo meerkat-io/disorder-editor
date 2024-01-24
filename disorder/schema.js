@@ -2,13 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml')
 
-//TO-DO cyclic reference check (between messages)
-
 /**
  * @property {string} type
- * @property {Type} element
- * @property {Map<string, Type>} children
- * @property {string} reference
+ * @property {Type} reference
+ * @property {Map<string, Type>} fields
+ * @property {string[]} enums
  */
 class Type {
     static BOOL = 'bool';
@@ -20,16 +18,21 @@ class Type {
 
     static STRING = 'string';
     static TIMESTAMP = 'timestamp';
-    static ENUM = 'enum';
 
     static ARRAY = 'array';
     static MAP = 'map';
 
+    static ENUM = 'enum';
+    static ENUM_REFERENCE = 'enum_reference';
+
     static STRUCT = 'struct';
-    static REFERENCE = 'reference';
+    static STRUCT_REFERENCE = 'struct_reference';
 
     static primaryTypes = [Type.BOOL, Type.INT, Type.LONG, Type.FLOAT, Type.DOUBLE, Type.BYTES,
-    Type.STRING, Type.TIMESTAMP, Type.ENUM];
+        Type.STRING, Type.TIMESTAMP];
+
+    static reservedNames = [Type.BOOL, Type.INT, Type.LONG, Type.FLOAT, Type.DOUBLE, Type.BYTES,
+        Type.STRING, Type.TIMESTAMP, Type.ENUM, Type.ARRAY, Type.MAP, Type.STRUCT];
 
     /**
      * @param {string} type 
@@ -38,42 +41,61 @@ class Type {
         if (typeof type !== 'string') {
             throw new Error('Type must be a string');
         }
+        /**
+         * @type {string}
+         */
         this.type = type;
-        this.element = undefined;
-        this.children = undefined;
+        /**
+         * @type {Type}
+         */
         this.reference = undefined;
+        /**
+         * @type {Map<string, Type>}
+         */
+        this.fields = undefined;
+        /**
+         * @type {string[]}
+         */
+        this.enums = undefined;
 
         if (Type.isPrimary(this.type)) {
             // pass
         } else if (this.type.startsWith('array[') && this.type.endsWith(']')) {
-            this.element = new Type(this.type.substring(6, this.type.length - 1));
+            this.reference = new Type(this.type.substring(6, this.type.length - 1));
             this.type = Type.ARRAY;
         } else if (this.type.startsWith('map[') && this.type.endsWith(']')) {
-            this.element = new Type(this.type.substring(4, this.type.length - 1));
+            this.reference = new Type(this.type.substring(4, this.type.length - 1));
             this.type = Type.MAP;
         } else if (this.type === Type.STRUCT) {
-            this.children = new Map();
-        } else if (validateQualifiedName(this.type)) {
-            this.reference = this.type;
-            this.type = Type.REFERENCE;
-        } else {
-            throw new Error(`Type "${type}" is not a valid type`);
+            this.fields = new Map();
+        } else if (this.type === Type.ENUM) {
+            this.enums = [];
+        } else if (!validateQualifiedName(this.type)) {
+            throw new Error(`Type "${type}" is not a valid type name`);
         }
     }
 
     /**
      * @param {string} type 
-     * @returns 
+     * @returns {boolean}
      */
     static isPrimary(type) {
         return Type.primaryTypes.indexOf(type) !== -1;
+    }
+
+    /**
+     * @param {string} name
+     * @returns {boolean}
+     */
+    static isReserved(name) {
+        return Type.reservedNames.indexOf(name) !== -1;
     }
 }
 
 /**
  * @public
  * @property {Map<string, Type>} messages
- * @property {Map<string, string[]>} enums
+ * @property {Map<string, Type>} enums
  * @property {Set<string>} processedFiles
  * @property {Map<string, Type[]>} packageMessages
  */
@@ -81,9 +103,25 @@ class Schema {
     static SCHEMA_NAME = 'disorder';
 
     constructor() {
+        /**
+         * @private
+         * @type {Map<string, Type>}
+         */
         this.messages = new Map();
+        /**
+         * @private
+         * @type {Map<string, Type>}
+         */
         this.enums = new Map();
+        /**
+         * @private
+         * @type {Set<string>}
+         */
         this.processedFiles = new Set();
+        /**
+         * @private
+         * @type {Map<string, Type[]>}
+         */
         this.packageMessages = new Map();
     }
 
@@ -131,36 +169,45 @@ class Schema {
             throw new Error(`Schema ${filePath} package "${packageName}" is invalid`);
         }
 
+        /**
+         * @type {string[]}
+         */
         const messages = [];
         if (file.messages) {
             if (!(typeof file.messages === 'object')) {
                 throw new Error(`Schema ${filePath} messages must be a map`);
             }
 
-            for (const name of Object.keys(file.messages)) {
-                if (!validateSimpleName(name)) {
-                    throw new Error(`Schema ${filePath} message name "${name}" is invalid`);
+            for (const messageName of Object.keys(file.messages)) {
+                if (!validateSimpleName(messageName) || Type.isReserved(messageName)) {
+                    throw new Error(`Schema ${filePath} message name "${messageName}" is invalid`);
                 }
-                const qualifiedName = `${packageName}.${name}`;
+                const qualifiedName = `${packageName}.${messageName}`;
                 if (this.messages.has(qualifiedName)) {
-                    throw new Error(`Schema ${filePath} message "${name}" is duplicated`);
+                    throw new Error(`Schema ${filePath} message "${messageName}" is duplicated`);
                 }
 
-                const fields = file.messages[name];
+                /**
+                 * @type {Map<string, string>}
+                 */
+                const fields = file.messages[messageName];
                 if (!(typeof fields === 'object')) {
-                    throw new Error(`Schema ${filePath} message "${name}" fields must be a map`);
+                    throw new Error(`Schema ${filePath} message "${messageName}" fields must be a map`);
                 }
+                /**
+                 * @type {Set<string>}
+                 */
                 const fieldsSet = new Set();
                 const struct = new Type(Type.STRUCT);
                 for (const fieldName of Object.keys(fields)) {
-                    if (!validateSimpleName(fieldName)) {
-                        throw new Error(`Schema ${filePath} message ${name} field name "${fieldName}" is invalid`);
+                    if (!validateSimpleName(fieldName) || Type.isReserved(fieldName)) {
+                        throw new Error(`Schema ${filePath} message ${messageName} field name "${fieldName}" is invalid`);
                     }
                     if (fieldsSet.has(fieldName)) {
-                        throw new Error(`Schema ${filePath} message ${name} field name "${fieldName}" is duplicated`);
+                        throw new Error(`Schema ${filePath} message ${messageName} field name "${fieldName}" is duplicated`);
                     }
                     const fieldType = fields[fieldName];
-                    struct.children.set(fieldName, new Type(fieldType));
+                    struct.fields.set(fieldName, new Type(fieldType));
                     fieldsSet.add(fieldName);
                 }
                 this.messages.set(qualifiedName, struct);
@@ -168,7 +215,7 @@ class Schema {
                     this.packageMessages.set(packageName, []);
                 }
                 this.packageMessages.get(packageName).push(struct);
-                messages.push(name);
+                messages.push(messageName);
             }
         }
 
@@ -177,33 +224,41 @@ class Schema {
                 throw new Error(`Schema ${filePath} enums must be a map`);
             }
 
-            for (const name of Object.keys(file.enums)) {
-                if (!validateSimpleName(name)) {
-                    throw new Error(`Schema ${filePath} enum name "${name}" is invalid`);
+            for (const enumName of Object.keys(file.enums)) {
+                if (!validateSimpleName(enumName) || Type.isReserved(enumName)) {
+                    throw new Error(`Schema ${filePath} enum name "${enumName}" is invalid`);
                 }
-                const qualifiedName = `${packageName}.${name}`;
+                const qualifiedName = `${packageName}.${enumName}`;
                 if (this.enums.has(qualifiedName)) {
-                    throw new Error(`Schema ${filePath} enum "${name}" is duplicated`);
+                    throw new Error(`Schema ${filePath} enum "${enumName}" is duplicated`);
                 }
 
-                const values = file.enums[name];
-                if (!(typeof values === 'object' && values instanceof Array)) {
-                    throw new Error(`Schema ${filePath} enum "${name}" values must be an array`);
+                /**
+                 * @type {string[]}
+                 */
+                const enums = file.enums[enumName];
+                if (!(typeof enums === 'object' && enums instanceof Array)) {
+                    throw new Error(`Schema ${filePath} enum "${enumName}" values must be an array`);
                 }
+                /**
+                 * @type {Set<string>}
+                 */
                 const valuesSet = new Set();
-                for (const value of values) {
-                    if (typeof value !== 'string') {
-                        throw new Error(`Schema ${filePath} enum "${name}" value "${value}" must be a string`);
+                const enumType = new Type(Type.ENUM);
+                for (const enumValue of enums) {
+                    if (typeof enumValue !== 'string') {
+                        throw new Error(`Schema ${filePath} enum "${enumName}" value "${enumValue}" must be a string`);
                     }
-                    if (!validateEnumValue(value)) {
-                        throw new Error(`Schema ${filePath} enum "${name}" value "${value}" must be a valid simple variable name`);
+                    if (!validateSimpleName(enumValue)) {
+                        throw new Error(`Schema ${filePath} enum "${enumName}" value "${enumValue}" must be a valid simple variable name`);
                     }
-                    if (valuesSet.has(value)) {
-                        throw new Error(`Schema ${filePath} enum "${name}" value "${value}" is duplicated`);
+                    if (valuesSet.has(enumValue)) {
+                        throw new Error(`Schema ${filePath} enum "${enumName}" value "${enumValue}" is duplicated`);
                     }
-                    valuesSet.add(value);
+                    valuesSet.add(enumValue);
                 }
-                this.enums.set(qualifiedName, values);
+                enumType.enums = enums;
+                this.enums.set(qualifiedName, enumType);
             }
         }
 
@@ -221,29 +276,24 @@ class Schema {
      * @private
      */
     resovle() {
-        for (const [packageName, messages] of this.packageMessages) {
+        for (const [packageName, messages] of this.packageMessages.entries()) {
             for (const message of messages) {
-                for (const [name, field] of message.children.entries()) {
-                    let type = field.type;
-                    let container = field.element;
-                    while (type === Type.ARRAY || type === Type.MAP) {
-                        container = container.element;
-                        type = container.type;
+                for (const fieldType of message.fields.values()) {
+                    let type = fieldType;
+                    while (type.type === Type.ARRAY || type.type === Type.MAP) {
+                        type = type.reference;
                     }
-                    if (type === Type.REFERENCE) {
-                        let qualified = type.reference;
+                    if (!Type.isPrimary(type.type)) {
+                        let qualified = type.type;
                         if (!qualified.includes('.')) {
                             qualified = `${packageName}.${qualified}`;
                         }
                         if (this.enums.has(qualified)) {
-                            type.type = Type.ENUM;
-                            type.reference = undefined;
+                            type.type = Type.ENUM_REFERENCE;
+                            type.reference = this.enums.get(qualified);
                         } else if (this.messages.has(qualified)) {
-                            if (container) {
-                                container.element = this.messages.get(qualified);
-                            } else {
-                                message.children.set(name, this.messages.get(qualified));
-                            }
+                            type.type = Type.STRUCT_REFERENCE;
+                            type.reference = this.messages.get(qualified);
                         } else {
                             throw new Error(`Type "${type.reference}" is not defined`);
                         }
@@ -272,9 +322,6 @@ const qualifiedName = new RegExp(`^[a-zA-Z_][a-zA-Z_0-9]*(.[a-zA-Z_][a-zA-Z_0-9]
  * @returns {boolean} 
  */
 function validateSimpleName(name) {
-    if (Type.isPrimary(name)) {
-        return false;
-    }
     return simpleName.test(name);
 }
 
@@ -284,14 +331,6 @@ function validateSimpleName(name) {
  */
 function validateQualifiedName(name) {
     return qualifiedName.test(name);
-}
-
-/**
- * @param {string} value 
- * @returns {boolean} 
- */
-function validateEnumValue(value) {
-    return simpleName.test(value);
 }
 
 module.exports = { Type, Schema };

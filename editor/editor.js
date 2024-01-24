@@ -8,7 +8,6 @@ const { Document } = require('./document')
  * @property {vscode.ExtensionContext} context
  * @property {Set<{resource: string, webview: vscode.WebviewPanel}>} webviews
  * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>} onDidChange
- * @property {vscode.CustomDocumentEditEvent<Document>} onDidChangeCustomDocument
  * @property {number} requestId
  * @property {Map<number, (response: any) => void>} callbacks
  */
@@ -17,11 +16,25 @@ class EditorProvider {
 	 * @param {vscode.ExtensionContext} context
 	 */
 	constructor(context) {
+		/**
+		 * @type {vscode.ExtensionContext}
+		 */
 		this.context = context;
+		/**
+		 * @type {Set<{resource: string, webview: vscode.WebviewPanel}>}
+		 */
 		this.webviews = new Set();
+		/**
+		 * @type {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>}
+		 */
 		this.onDidChange = new vscode.EventEmitter();
-		this.onDidChangeCustomDocument = this.onDidChange.event;
+		/**
+		 * @type {number}
+		 */
 		this.requestId = 1;
+		/**
+		 * @type {Map<number, (response: any) => void>}
+		 */
 		this.callbacks = new Map();
 	}
 
@@ -66,7 +79,11 @@ class EditorProvider {
 
 		const listeners = [];
 		listeners.push(doc.onDidChange.event(e => {
-			this.onDidChange.fire({ doc, ...e });
+			this.onDidChange.fire({ 
+				document: doc,
+				undo: e.redo,
+				redo: e.undo,
+			 });
 		}));
 
 		listeners.push(doc.onDidChangeDocument.event(e => {

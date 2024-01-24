@@ -41,21 +41,51 @@ class ByteArray {
      * @param {Uint8Array | undefined} buffer
      */
     constructor(buffer = undefined) {
-        if (buffer) {
-            this.buffer = buffer;
-            this.readOffset = 0;
-            this.writeOffset = buffer.length;
+        /**
+         * @type {Uint8Array}
+         */
+        this.buffer = buffer;
+        /**
+         * @type {number}
+         * @private
+         */
+        this.readOffset = 0;
+        /**
+         * @type {number}
+         * @private
+         */
+        this.writeOffset = 0;
+        if (this.buffer) {
+            this.writeOffset = this.buffer.length;
         } else {
             this.buffer = new Uint8Array(1024);
-            this.readOffset = 0;
-            this.writeOffset = 0;
         }
 
+        /**
+         * @type {Float32Array}
+         * @private
+         */
         this.f32 = new Float32Array([-0]);
+        /**
+         * @type {Uint8Array}
+         * @private
+         */
         this.f32Bytes = new Uint8Array(this.f32.buffer);
+        /**
+         * @type {Float64Array}
+         * @private
+         */
         this.f64 = new Float64Array([-0]);
+        /**
+         * @type {Uint8Array}
+         * @private
+         */
         this.f64Bytes = new Uint8Array(this.f64.buffer);
 
+        /**
+         * @type {boolean}
+         * @private
+         */
         this.floatLE = this.f32Bytes[3] === 128;
     }
 
@@ -310,8 +340,10 @@ class Reader {
      * @param {ByteArray} bytes 
      */
     constructor(bytes) {
+        /**
+         * @type {ByteArray}
+         */
         this.bytes = bytes;
-        this.bytes.readOffset = 0;
     }
 
     /**
@@ -406,6 +438,9 @@ class Reader {
 class Writer {
 
     constructor() {
+        /**
+         * @type {ByteArray}
+         */
         this.bytes = new ByteArray();
     }
 
@@ -485,21 +520,26 @@ class Writer {
                 this.bytes.writeLong(BigInt(value.getTime()));
                 break;
 
+            case Type.ENUM_REFERENCE:
+                type = type.reference;
             case Type.ENUM:
                 if (typeof value !== 'string') {
                     throw new Error(`value ${value} is not a enum`);
                 }
+                if (type.enums.indexOf(value) === -1) {
+                    throw new Error(`value ${value} is not a enum of ${type}`);
+                }
                 this.writeTag(Tag.Enum);
                 this.writeName(value);
                 break;
-            
+
             case Type.ARRAY:
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }
                 this.writeTag(Tag.ArrayStart);
                 for (const element of value) {
-                    this.write(element, type.element);
+                    this.write(element, type.reference);
                 }
                 this.writeTag(Tag.ArrayEnd);
                 break;
@@ -510,17 +550,19 @@ class Writer {
                 }
                 this.writeTag(Tag.ObjectStart);
                 for (const [key, element] of value.entries()) {
-                    this.write(element, type.element, key);
+                    this.write(element, type.reference, key);
                 }
                 this.writeTag(Tag.ObjectEnd);
                 break;
 
+            case Type.STRUCT_REFERENCE:
+                type = type.reference;
             case Type.STRUCT:
                 if (!(value instanceof Map)) {
                     throw new Error(`value ${value} is not a struct`);
                 }
                 this.writeTag(Tag.ObjectStart);
-                for (const [key, element] of type.children) {
+                for (const [key, element] of type.fields.entries()) {
                     if (value.has(key)) {
                         this.write(value.get(key), element, key);
                     }
@@ -534,6 +576,7 @@ class Writer {
     }
 
     /**
+     * @private
      * @param {string} name 
      */
     writeName(name) {
@@ -546,6 +589,7 @@ class Writer {
     }
 
     /**
+     * @private
      * @param {number} tag 
      */
     writeTag(tag) {

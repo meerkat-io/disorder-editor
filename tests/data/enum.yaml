@@ -1,0 +1,16 @@
+schema: disorder
+
+version: v1
+
+package: test
+
+messages:
+  object:
+    enum_field: color
+    nested: map[map[array[array[map[color]]]]]
+
+enums:
+  color:
+    - red
+    - green
+    - blue

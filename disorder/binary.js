@@ -25,6 +25,27 @@ const Tag = {
     ObjectEnd: 24
 }
 
+const TypeTag = new Map([
+    [Type.BOOL, Tag.Bool],
+    [Type.INT, Tag.Int],
+    [Type.LONG, Tag.Long],
+    [Type.FLOAT, Tag.Float],
+    [Type.DOUBLE, Tag.Double],
+    [Type.BYTES, Tag.Bytes],
+
+    [Type.STRING, Tag.String],
+    [Type.TIMESTAMP, Tag.Timestamp],
+
+    [Type.ARRAY, Tag.ArrayStart],
+    [Type.MAP, Tag.ObjectStart],
+
+    [Type.ENUM, Tag.Enum],
+    [Type.ENUM_REFERENCE, Tag.Enum],
+
+    [Type.STRUCT, Tag.ObjectStart],
+    [Type.STRUCT_REFERENCE, Tag.ObjectStart]
+]);
+
 /**
  * @public
  * @property {Uint8Array} buffer
@@ -450,6 +471,10 @@ class Writer {
      * @param {string | undefined} name 
      */
     write(value, type, name = undefined) {
+        if (!TypeTag.has(type.type)) {
+            throw new Error(`unsupported type ${type.type}`);
+        }
+        this.writeTag(TypeTag.get(type.type));
         if (name) {
             this.writeName(name);
         }
@@ -458,7 +483,6 @@ class Writer {
                 if (typeof value !== 'boolean') {
                     throw new Error(`value ${value} is not a boolean`);
                 }
-                this.writeTag(Tag.Bool);
                 this.bytes.writeBoolean(value);
                 break;
 
@@ -466,7 +490,6 @@ class Writer {
                 if (typeof value !== 'number') {
                     throw new Error(`value ${value} is not a integer`);
                 }
-                this.writeTag(Tag.Int);
                 this.bytes.writeInt(value);
                 break;
 
@@ -474,7 +497,6 @@ class Writer {
                 if (typeof value !== 'bigint') {
                     throw new Error(`value ${value} is not a long (bigint)`);
                 }
-                this.writeTag(Tag.Long);
                 this.bytes.writeLong(value);
                 break;
 
@@ -482,7 +504,6 @@ class Writer {
                 if (typeof value !== 'number') {
                     throw new Error(`value ${value} is not a float`);
                 }
-                this.writeTag(Tag.Float);
                 this.bytes.writeFloat(value);
                 break;
 
@@ -490,7 +511,6 @@ class Writer {
                 if (typeof value !== 'number') {
                     throw new Error(`value ${value} is not a double`);
                 }
-                this.writeTag(Tag.Double);
                 this.bytes.writeDouble(value);
                 break;
 
@@ -498,7 +518,6 @@ class Writer {
                 if (!(value instanceof Uint8Array)) {
                     throw new Error(`value ${value} is not a bytes (Uint8Array)`);
                 }
-                this.writeTag(Tag.Bytes);
                 this.bytes.writeInt(value.length);
                 this.bytes.writeBytes(value);
                 break;
@@ -507,7 +526,6 @@ class Writer {
                 if (typeof value !== 'string') {
                     throw new Error(`value ${value} is not a string`);
                 }
-                this.writeTag(Tag.String);
                 this.bytes.writeInt(value.length);
                 this.bytes.writeBytes(new TextEncoder().encode(value));
                 break;
@@ -516,7 +534,6 @@ class Writer {
                 if (!(value instanceof Date)) {
                     throw new Error(`value ${value} is not a timestamp (Date)`);
                 }
-                this.writeTag(Tag.Timestamp);
                 this.bytes.writeLong(BigInt(value.getTime()));
                 break;
 
@@ -527,9 +544,8 @@ class Writer {
                     throw new Error(`value ${value} is not a enum`);
                 }
                 if (type.enums.indexOf(value) === -1) {
-                    throw new Error(`value ${value} is not a enum of ${type}`);
+                    throw new Error(`value ${value} is not a enum of [${type.enums}]`);
                 }
-                this.writeTag(Tag.Enum);
                 this.writeName(value);
                 break;
 
@@ -537,7 +553,6 @@ class Writer {
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }
-                this.writeTag(Tag.ArrayStart);
                 for (const element of value) {
                     this.write(element, type.reference);
                 }
@@ -548,7 +563,6 @@ class Writer {
                 if (!(value instanceof Map)) {
                     throw new Error(`value ${value} is not a map`);
                 }
-                this.writeTag(Tag.ObjectStart);
                 for (const [key, element] of value.entries()) {
                     this.write(element, type.reference, key);
                 }
@@ -561,7 +575,6 @@ class Writer {
                 if (!(value instanceof Map)) {
                     throw new Error(`value ${value} is not a struct`);
                 }
-                this.writeTag(Tag.ObjectStart);
                 for (const [key, element] of type.fields.entries()) {
                     if (value.has(key)) {
                         this.write(value.get(key), element, key);

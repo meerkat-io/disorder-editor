@@ -126,6 +126,22 @@ class Schema {
     }
 
     /**
+     * @param {string} qualified 
+     * @returns Type
+     */
+    getEnum(qualified) {
+        return this.enums.get(qualified);
+    }
+
+    /**
+     * @param {string} qualified 
+     * @returns 
+     */
+    getMessage(qualified) {
+        return this.messages.get(qualified);
+    }
+
+    /**
      * @param {string} filePath 
      * @returns {string[]}
      */
@@ -265,7 +281,7 @@ class Schema {
         const folder = path.dirname(filePath);
         if (file.import) {
             for (const importPath of file.import) {
-                this.load(path.resolve(folder, importPath));
+                this.parse(path.resolve(folder, importPath));
             }
         }
 

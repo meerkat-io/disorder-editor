@@ -12,7 +12,7 @@ messages:
     bool_field: bool
     int_field: int
     string_field: string
-    bytes_fields: bytes
+    bytes_field: bytes
     enum_field: color
     time_field: timestamp
     obj_field: sub

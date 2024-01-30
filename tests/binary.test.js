@@ -208,11 +208,28 @@ test('read and write message', () => {
 
     const writer = new Writer();
     writer.write(object, structType);
+    writer.write(object, structReference);
 
     const reader = new Reader(writer.bytes);
+    assert.deepEqual(reader.read(), object);
     assert.deepEqual(reader.read(), object);
 });
 
 test('read and write loop message', () => {
     //TODO: test loop message
+    const schema = new Schema();
+    schema.load('./tests/data/loop_object.yaml');
+
+    const loopType = schema.getMessage('test.loop');
+    const loopObject = new Map();
+    loopObject.set('id', 1);
+    loopObject.set('sub', new Map());
+    loopObject.get('sub').set('id', 2);
+    loopObject.get('sub').set('sub', new Map());
+
+    const writer = new Writer();
+    writer.write(loopObject, loopType);
+
+    const reader = new Reader(writer.bytes);
+    assert.deepEqual(reader.read(), loopObject);
 });

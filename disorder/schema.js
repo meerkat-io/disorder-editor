@@ -135,7 +135,7 @@ class Schema {
 
     /**
      * @param {string} qualified 
-     * @returns 
+     * @returns Type
      */
     getMessage(qualified) {
         return this.messages.get(qualified);

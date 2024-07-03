@@ -1,6 +1,7 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 const vscode = require('vscode')
+const path = require('path')
 const { Document } = require('./document')
 
 /**
@@ -79,11 +80,11 @@ class EditorProvider {
 
 		const listeners = [];
 		listeners.push(doc.onDidChange.event(e => {
-			this.onDidChange.fire({ 
+			this.onDidChange.fire({
 				document: doc,
 				undo: e.redo,
 				redo: e.undo,
-			 });
+			});
 		}));
 
 		listeners.push(doc.onDidChangeDocument.event(e => {
@@ -190,10 +191,14 @@ class EditorProvider {
 	 */
 	getHtmlForWebview(webviewPanel) {
 		const webview = webviewPanel.webview;
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'webview', 'main.js'));
+		const appUri = webview.asWebviewUri(vscode.Uri.file(
+			path.join(this.context.extensionPath, 'webview', 'js', 'app.js')
+		))
 		const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'webview', 'app.css'));
+			this.context.extensionUri, 'webview', 'css', 'app.css'));
+		const chunkVendorsUri = webview.asWebviewUri(vscode.Uri.joinPath(
+			this.context.extensionUri, 'webview', 'js', 'chunk-vendors.js'));
+		//this.context.extensionPath
 
 		// Use a nonce to whitelist which scripts can be run */
 		const nonce = this.getNonce();
@@ -202,24 +207,24 @@ class EditorProvider {
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
-				<meta charset="UTF-8">
-
-				<!--
-				Use a content security policy to only allow loading images from https or from our extension directory,
-				and only allow scripts that have a specific nonce.
-				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<!--
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width,initial-scale=1.0">
+				<meta http-equiv="Content-Security-Policy"
+					content="default-src 'none';
+					style-src ${webviewPanel.webview.cspSource};
+					script-src 'nonce-${nonce}';"
+				/>
 				<link href="${cssUri}" rel="stylesheet"/>
-				-->
 				<title>Disorder Editor</title>
 			</head>
 			<body>
 				Custom Editor
-				<!--
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-				-->
+				<div id="app"></div>
+				<h3>${appUri.path}</h3>
+				<h3>${this.context.extensionPath}</h3>
+				<h3>${path.join(this.context.extensionPath, 'webview', 'js', 'app.js')}</h3>
+				<script nonce="${nonce}" src="${chunkVendorsUri}"></script>
+				<script nonce="${nonce}" src="${appUri}"></script>
 			</body>
 			</html>`;
 	}

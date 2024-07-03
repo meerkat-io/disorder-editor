@@ -222,7 +222,6 @@ class EditorProvider {
 				<div id="app"></div>
 				<h3>${appUri.path}</h3>
 				<h3>${this.context.extensionPath}</h3>
-				<h3>${path.join(this.context.extensionPath, 'webview', 'js', 'app.js')}</h3>
 				<script nonce="${nonce}" src="${chunkVendorsUri}"></script>
 				<script nonce="${nonce}" src="${appUri}"></script>
 			</body>

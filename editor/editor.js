@@ -122,6 +122,7 @@ class EditorProvider {
 	 * @returns {Thenable<void>}
 	 */
 	saveCustomDocument(document, cancellation) {
+		//TODO: fetch data from webview then save
 		return document.save(cancellation);
 	}
 
@@ -132,6 +133,7 @@ class EditorProvider {
 	 * @returns {Thenable<void>}
 	 */
 	saveCustomDocumentAs(document, destination, cancellation) {
+		//TODO: fetch data from webview then save as
 		return document.saveAs(destination, cancellation);
 	}
 
@@ -141,6 +143,7 @@ class EditorProvider {
 	 * @returns {Thenable<void>}
 	 */
 	revertCustomDocument(document, cancellation) {
+		//TODO
 		return document.revert(cancellation);
 	}
 
@@ -151,6 +154,7 @@ class EditorProvider {
 	 * @returns {Thenable<vscode.CustomDocumentBackup>}
 	 */
 	backupCustomDocument(document, context, cancellation) {
+		//TODO
 		return document.backup(context.destination, cancellation);
 	}
 	//#endregion
@@ -198,7 +202,6 @@ class EditorProvider {
 			this.context.extensionUri, 'webview', 'css', 'app.css'));
 		const chunkVendorsUri = webview.asWebviewUri(vscode.Uri.joinPath(
 			this.context.extensionUri, 'webview', 'js', 'chunk-vendors.js'));
-		//this.context.extensionPath
 
 		// Use a nonce to whitelist which scripts can be run */
 		const nonce = this.getNonce();
@@ -271,11 +274,12 @@ class EditorProvider {
 	/**
 	 * @param {vscode.WebviewPanel} webviewPanel 
 	 * @param {Document} document 
-	 * @param {{type: string, requestId: number, body: any}} message 
+	 * @param {{command: string, requestId: number, body: any}} message 
 	 * @private
 	 */
 	onMessage(webviewPanel, document, message) {
-		switch (message.type) {
+		console.log("receive data in editor:", message)
+		switch (message.command) {
 			case 'ready':
 				if (document.uri.scheme === 'untitled') {
 					this.postMessage(webviewPanel, 'init', {

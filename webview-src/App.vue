@@ -1,7 +1,24 @@
 <script setup>
-import {ref} from 'vue'
+import {ref, onMounted, onUnmounted} from 'vue'
+
+const vscode = acquireVsCodeApi();
 
 const count = ref(0)
+
+const showSchema = ref(false)
+const showDataGrid = ref(false)
+
+onMounted(window.addEventListener('message', event => {
+  const message = event.data
+  receiveMessage(message)
+}))
+
+function receiveMessage(message) {
+  console.log('receiveMessage', message)
+}
+
+vscode.postMessage({command: 'ready'})
+
 </script>
 
 <template>

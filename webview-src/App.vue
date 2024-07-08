@@ -1,39 +1,35 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue'
+import { ref, onMounted } from 'vue'
 
 const vscode = acquireVsCodeApi();
 
-const selectSchema = ref(false)
-const showDataGrid = ref(false)
+const schema = 0
+const message = 1
+const datagrid = 2
+const current = ref(0)
 
-onMounted(window.addEventListener('message', event => {
-  const message = event.data
-  receiveMessage(message)
-}))
+const schemaStatus = ref('empty')
+
+onMounted(window.addEventListener('message', (event) => receiveMessage(event.data)))
 
 function receiveMessage(message) {
   console.log('receiveMessage', message)
   switch (message.command) {
     case 'select_schema':
-      selectSchema.value = true
+      current.value = schema
+      schemaStatus.value = message.body
       break
 
-    case 'showDataGrid':
-      showDataGrid.value = true
+    case 'select_message':
+      current.value = message
       break
   }
 }
 
-vscode.postMessage({command: 'ready'})
+vscode.postMessage({ command: 'ready' })
 
 </script>
 
 <template>
-  <schema-selector v-if="selectSchema"/>
+  <schema-selector v-if="current == schema" @select="(path) => vscode.postMessage({ command: 'schema', body: path })" :status="schemaStatus"/>
 </template>
-
-<style scoped>
-button {
-  font-weight: bold;
-}
-</style>

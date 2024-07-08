@@ -2,7 +2,8 @@
 
 const vscode = require('vscode')
 const { EditorProvider } = require('./editor')
-const { Edit } = require('./edit')
+const { Edit } = require('./edit');
+const { Schema } = require('../disorder/schema');
 
 /**
  * @public
@@ -36,6 +37,10 @@ class Document {
 		 * @type {Uint8Array}
 		 */
 		this.documentData = undefined;
+		/**
+		 * @type {Schema}
+		 */
+		this.schema = new Schema();
 
 		/**
 		 * @type {boolean}
@@ -85,6 +90,14 @@ class Document {
 		const document = new Document(dataFile, editorProvider);
 		await document.readFile();
 		return document;
+	}
+
+	/**
+	 * @param {string} path
+	 * @returns {string[]}
+	 */ 
+	loadSchema(path) {
+		this.schema.load(path);
 	}
 
 	dispose() {

@@ -270,18 +270,26 @@ class EditorProvider {
 		console.log("receive data in editor:", message)
 		switch (message.command) {
 			case 'ready':
-				const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
+				//const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
 				if (document.documentData.length === 0) {
-					this.postMessage(webviewPanel, 'select_schema', {
-						value: document.documentData,
-						editable,
-					});
+					this.postMessage(webviewPanel, 'select_schema', "empty");
 				}
 				/*
 				this.postMessage(webviewPanel, 'init', {
 					value: document.documentData,
 					editable,
 				});*/
+				return;
+
+			case 'schema':
+				const path = message.body;
+				console.log("load schema:", path)
+				try {
+					const messages = document.loadSchema(path);
+					this.postMessage(webviewPanel, 'select_message', messages);
+				} catch (error) {
+					this.postMessage(webviewPanel, 'select_schema', "invalid");
+				}
 				return;
 
 			case 'edit':

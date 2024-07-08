@@ -97,7 +97,7 @@ class Document {
 	 * @returns {string[]}
 	 */ 
 	loadSchema(path) {
-		this.schema.load(path);
+		return this.schema.load(path);
 	}
 
 	dispose() {

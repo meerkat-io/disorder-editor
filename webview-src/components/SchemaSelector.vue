@@ -15,13 +15,8 @@ function onSelect(event) {
 </script>
 
 <template>
-    <input ref="upload" type="file" name="upload" accept=".yaml, .yml" @change="onSelect">
-    <p v-if='status=="empty"'>Select schema file (yaml)</p>
-    <p v-if='status=="invalid"'>Schema file is invalid, select a valid file instead</p>
+    <input ref="upload" type="file" name="upload" accept=".yaml, .yml" @change="onSelect"/>
+    <br>
+    <label v-if='status=="empty"'>Select schema file (yaml)</label>
+    <label v-if='status=="invalid"'>Schema file is invalid, select a valid file instead</label>
 </template>
-
-<style scoped>
-button {
-    font-weight: bold;
-}
-</style>

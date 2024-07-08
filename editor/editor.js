@@ -283,9 +283,9 @@ class EditorProvider {
 
 			case 'schema':
 				const path = message.body;
-				console.log("load schema:", path)
 				try {
 					const messages = document.loadSchema(path);
+					console.log("select messages:", messages)
 					this.postMessage(webviewPanel, 'select_message', messages);
 				} catch (error) {
 					this.postMessage(webviewPanel, 'select_schema', "invalid");

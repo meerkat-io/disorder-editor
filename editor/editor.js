@@ -285,11 +285,18 @@ class EditorProvider {
 				const path = message.body;
 				try {
 					const messages = document.loadSchema(path);
-					console.log("select messages:", messages)
-					this.postMessage(webviewPanel, 'select_message', messages);
+					if (messages.length === 0) {
+						this.postMessage(webviewPanel, 'select_schema', "invalid");
+					} else {
+						this.postMessage(webviewPanel, 'select_message', messages);
+					}
 				} catch (error) {
 					this.postMessage(webviewPanel, 'select_schema', "invalid");
 				}
+				return;
+
+			case 'message':
+				//const rootMessage = message.body;
 				return;
 
 			case 'edit':

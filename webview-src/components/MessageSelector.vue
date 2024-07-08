@@ -1,22 +1,26 @@
 <script setup>
+import { ref } from 'vue'
 const props = defineProps({
   messages: {
     type: Array
   }
 })
 const emit = defineEmits(['select'])
+const selected = ref('')
 
-function onSelect(event) {
-    /*
-    const file = event.target.files[0]
-    if (file == null) {
+function onSelect() {
+    if (selected.value === '') {
         return
     }
-    console.log('select schema:', file.path)
-    emit('select', file.path)*/
+    console.log('root message:', selected.value)
+    emit('select', selected.value)
 }
 </script>
 
 <template>
-    <label>{{ messages.length }}</label>
+    <select v-model="selected">
+        <option disabled value="">Select root message type</option>
+        <option v-for="message in messages">{{ message }}</option>
+    </select>
+    <button @click="onSelect">Select</button>
 </template>

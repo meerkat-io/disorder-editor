@@ -9,7 +9,6 @@ const { Document } = require('./document')
  * @property {vscode.ExtensionContext} context
  * @property {Set<{resource: string, webview: vscode.WebviewPanel}>} webviews
  * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>} onDidChange
- * @property {number} requestId
  * @property {Map<number, (response: any) => void>} callbacks
  */
 class EditorProvider {
@@ -29,10 +28,6 @@ class EditorProvider {
 		 * @type {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>}
 		 */
 		this.onDidChange = new vscode.EventEmitter();
-		/**
-		 * @type {number}
-		 */
-		this.requestId = 1;
 		/**
 		 * @type {Map<number, (response: any) => void>}
 		 */
@@ -221,10 +216,7 @@ class EditorProvider {
 				<title>Disorder Editor</title>
 			</head>
 			<body>
-				Custom Editor
 				<div id="app"></div>
-				<h3>${appUri.path}</h3>
-				<h3>${this.context.extensionPath}</h3>
 				<script nonce="${nonce}" src="${chunkVendorsUri}"></script>
 				<script nonce="${nonce}" src="${appUri}"></script>
 			</body>
@@ -260,50 +252,40 @@ class EditorProvider {
 	//#region Comunication with webview
 	/**
 	 * @param {vscode.WebviewPanel} panel 
-	 * @param {string} type 
+	 * @param {string} command 
 	 * @param {*} body 
 	 * @private
 	 */
-	postMessage(panel, type, body) {
-		const requestId = this.requestId++;
-		const promise = new Promise(resolve => this.callbacks.set(requestId, resolve));
-		panel.webview.postMessage({ type, requestId, body });
-		return promise;
+	postMessage(panel, command, body) {
+		panel.webview.postMessage({ command, body });
 	}
 
 	/**
 	 * @param {vscode.WebviewPanel} webviewPanel 
 	 * @param {Document} document 
-	 * @param {{command: string, requestId: number, body: any}} message 
+	 * @param {{command: string, body: any}} message 
 	 * @private
 	 */
 	onMessage(webviewPanel, document, message) {
 		console.log("receive data in editor:", message)
 		switch (message.command) {
 			case 'ready':
-				if (document.uri.scheme === 'untitled') {
-					this.postMessage(webviewPanel, 'init', {
-						untitled: true,
-						editable: true,
-					});
-				} else {
-					const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
-
-					this.postMessage(webviewPanel, 'init', {
+				const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
+				if (document.documentData.length === 0) {
+					this.postMessage(webviewPanel, 'select_schema', {
 						value: document.documentData,
 						editable,
 					});
 				}
+				/*
+				this.postMessage(webviewPanel, 'init', {
+					value: document.documentData,
+					editable,
+				});*/
 				return;
 
 			case 'edit':
 				document.edit(message.body);
-				return;
-
-			// TO-DO
-			case 'response':
-				const callback = this.callbacks.get(message.requestId);
-				callback?.(message.body);
 				return;
 		}
 	}

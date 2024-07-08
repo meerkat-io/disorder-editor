@@ -3,9 +3,7 @@ import {ref, onMounted, onUnmounted} from 'vue'
 
 const vscode = acquireVsCodeApi();
 
-const count = ref(0)
-
-const showSchema = ref(false)
+const selectSchema = ref(false)
 const showDataGrid = ref(false)
 
 onMounted(window.addEventListener('message', event => {
@@ -15,6 +13,15 @@ onMounted(window.addEventListener('message', event => {
 
 function receiveMessage(message) {
   console.log('receiveMessage', message)
+  switch (message.command) {
+    case 'select_schema':
+      selectSchema.value = true
+      break
+
+    case 'showDataGrid':
+      showDataGrid.value = true
+      break
+  }
 }
 
 vscode.postMessage({command: 'ready'})
@@ -22,8 +29,7 @@ vscode.postMessage({command: 'ready'})
 </script>
 
 <template>
-  <h1>Hello Vue 3</h1>
-  <button @click="count++">Count is: {{ count }}</button>
+  <schema-selector v-if="selectSchema"/>
 </template>
 
 <style scoped>

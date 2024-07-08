@@ -132,13 +132,13 @@ class Document {
 	}
 
 	/**
-	 * @returns {Promise<Uint8Array>}
+	 * @returns {Promise<void>}
 	 */
 	async readFile() {
 		if (this.uri.scheme === 'untitled') {
-			return new Uint8Array();
+			this.documentData = new Uint8Array();
 		}
-		return new Uint8Array(await vscode.workspace.fs.readFile(this.uri));
+		this.documentData = new Uint8Array(await vscode.workspace.fs.readFile(this.uri));
 	}
 
 	/**
@@ -168,11 +168,10 @@ class Document {
 	 * @returns {Promise<void>}
 	 */
 	async revert(_cancellation) {
-		const diskContent = await this.readFile();
-		this.documentData = diskContent;
+		await this.readFile();
 		this.edits = this.savedEdits;
 		this.onDidChangeDocument.fire({
-			content: diskContent,
+			content: this.documentData,
 			edits: this.edits,
 		});
 	}

@@ -3,6 +3,7 @@
 const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
+const { Disorder } = require('../disorder/disorder')
 
 /**
  * @public
@@ -274,7 +275,7 @@ class EditorProvider {
 				if (document.documentData.length === 0) {
 					this.postMessage(webviewPanel, 'select_schema', "empty");
 				}
-				/*
+				/* else show datagrid // try catch
 				this.postMessage(webviewPanel, 'init', {
 					value: document.documentData,
 					editable,
@@ -296,7 +297,18 @@ class EditorProvider {
 				return;
 
 			case 'message':
-				//const rootMessage = message.body;
+				// save document data
+				const header = {
+					"schema": message.body.schema,
+					"message": message.body.message,
+				};
+				}
+				Disorder.writeData(document.header, document.schema.getMessage(message.body), document.documentData, document.uri);
+				this.postMessage(webviewPanel, 'show_datagrid', {
+					schema: document.schema,
+					message: message.body.message,
+					containe: message.body.container,
+				});
 				return;
 
 			case 'edit':

@@ -349,12 +349,11 @@ class Reader {
     }
 
     /**
-     * @param {string} file 
+     * @param {Uint8Array} bytes 
      * @returns 
      */
-    static fromFile(file) {
-        const buffer = fs.readFileSync(file);
-        return new Reader(new ByteArray(buffer));
+    static fromBytes(bytes) {
+        return new Reader(new ByteArray(bytes));
     }
 
     /**

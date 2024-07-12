@@ -41,6 +41,10 @@ class Document {
 		 * @type {Schema}
 		 */
 		this.schema = new Schema();
+		/**
+		 * @type {string}
+		 */
+		this.schemaPath = '';
 
 		/**
 		 * @type {boolean}
@@ -97,6 +101,7 @@ class Document {
 	 * @returns {string[]}
 	 */ 
 	loadSchema(path) {
+		this.schemaPath = path;
 		return this.schema.load(path);
 	}
 

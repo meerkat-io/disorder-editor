@@ -283,9 +283,9 @@ class EditorProvider {
 				return;
 
 			case 'schema':
-				const path = message.body;
+				const schemaPath = message.body;
 				try {
-					const messages = document.loadSchema(path);
+					const messages = document.loadSchema(schemaPath);
 					if (messages.length === 0) {
 						this.postMessage(webviewPanel, 'select_schema', "invalid");
 					} else {
@@ -298,12 +298,13 @@ class EditorProvider {
 
 			case 'message':
 				// save document data
-				const header = {
-					"schema": message.body.schema,
-					"message": message.body.message,
-				};
-				}
-				Disorder.writeData(document.header, document.schema.getMessage(message.body), document.documentData, document.uri);
+				const header = new Map();
+				const relativePath = path.relative(document.uri.path, document.schemaPath);
+				header.set("schema", relativePath);
+				header.set("message", message.body.message);
+				header.set("container", message.body.container);
+				const type = document.schema.getMessage(message.body.message);
+				Disorder.write(header, type, {}, document.uri.path);
 				this.postMessage(webviewPanel, 'show_datagrid', {
 					schema: document.schema,
 					message: message.body.message,

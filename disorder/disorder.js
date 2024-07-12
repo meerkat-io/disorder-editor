@@ -7,15 +7,17 @@ class Disorder {
 
     /**
      * @param {Map<string, string>} header
-     * @param {any} data 
+     * @param {any} value 
      * @param {Type} type
      * @param {string} path
      * @returns {void}
      */
-    static write(header, type, data, path) {
+    static write(header, type, value, path) {
         const writer = new Writer();
+        const headerType = Disorder.HEADER_TYPE
+        console.log(headerType)
         writer.write(header, Disorder.HEADER_TYPE);
-        writer.write(data, type);
+        writer.write(value, type);
         fs.writeFileSync(path, writer.bytes.buffer);
     }
 
@@ -32,3 +34,5 @@ class Disorder {
         return header;
     }     */
 }
+
+module.exports = { Disorder }

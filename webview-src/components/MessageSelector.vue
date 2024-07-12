@@ -8,12 +8,14 @@ const props = defineProps({
 const emit = defineEmits(['select'])
 const message = ref('')
 const container = ref('')
+const buttonDisabled = ref(false)
 
 function onSelect() {
     if (message.value === '' || container.value === '') {
         return
     }
     console.log('root message:', message.value)
+    buttonDisabled.value = true
     emit('select', { message: message.value, container: container.value })
 }
 </script>
@@ -29,5 +31,5 @@ function onSelect() {
         <option value="array">array</option>
         <option value="map">map</option>
     </select>
-    <button @click="onSelect">Select</button>
+    <button :disabled="buttonDisabled" @click="onSelect">Select</button>
 </template>

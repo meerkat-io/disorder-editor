@@ -304,7 +304,7 @@ class EditorProvider {
 				header.set("message", message.body.message);
 				header.set("container", message.body.container);
 				const type = document.schema.getMessage(message.body.message);
-				Disorder.write(header, type, {}, document.uri.path);
+				Disorder.write(header, type, new Map(), document.uri.path);
 				this.postMessage(webviewPanel, 'show_datagrid', {
 					schema: document.schema,
 					message: message.body.message,

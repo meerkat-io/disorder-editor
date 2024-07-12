@@ -231,7 +231,7 @@ class Schema {
                     this.packageMessages.set(packageName, []);
                 }
                 this.packageMessages.get(packageName).push(struct);
-                messages.push(messageName);
+                messages.push(qualifiedName);
             }
         }
 

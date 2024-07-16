@@ -3,14 +3,12 @@
 const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
-const { Disorder } = require('../disorder/disorder')
 
 /**
  * @public
  * @property {vscode.ExtensionContext} context
  * @property {Set<{resource: string, webview: vscode.WebviewPanel}>} webviews
  * @property {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>} onDidChange
- * @property {Map<number, (response: any) => void>} callbacks
  */
 class EditorProvider {
 	/**
@@ -29,10 +27,6 @@ class EditorProvider {
 		 * @type {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>}
 		 */
 		this.onDidChange = new vscode.EventEmitter();
-		/**
-		 * @type {Map<number, (response: any) => void>}
-		 */
-		this.callbacks = new Map();
 	}
 
 	/**
@@ -51,19 +45,6 @@ class EditorProvider {
 			});
 	}
 
-	/**
-	 * @param {Document} doc 
-	 */
-	async getFileData(doc) {
-		const webviewsForDocument = Array.from(this.getWebviews(doc.uri));
-		if (!webviewsForDocument.length) {
-			throw new Error('Could not find webview to save for');
-		}
-		const panel = webviewsForDocument[0];
-		const response = await this.postMessage(panel, 'file', {});
-		return new Uint8Array(response);
-	}
-
 	//#region CustomEditorProvider
 	/**
 	 * @param {vscode.Uri} uri 
@@ -72,20 +53,20 @@ class EditorProvider {
 	 * @returns {Promise<Document>}
 	 */
 	async openCustomDocument(uri, openContext, _token) {
-		const doc = await Document.create(uri, openContext.backupId, this);
+		const document = Document.create(uri, openContext.backupId);
 
 		const listeners = [];
-		listeners.push(doc.onDidChange.event(e => {
+		listeners.push(document.onDidChange.event(e => {
 			this.onDidChange.fire({
-				document: doc,
+				document: document,
 				undo: e.redo,
 				redo: e.undo,
 			});
 		}));
 
-		listeners.push(doc.onDidChangeDocument.event(e => {
+		listeners.push(document.onDidChangeDocument.event(e => {
 			// Update all webviews when the document changes
-			for (const webviewPanel of this.getWebviews(doc.uri)) {
+			for (const webviewPanel of this.getWebviews(document.uri)) {
 				this.postMessage(webviewPanel, 'update', {
 					edits: e.edits,
 					content: e.content,
@@ -93,8 +74,8 @@ class EditorProvider {
 			}
 		}));
 
-		doc.onDidDispose.event(() => this.disposeAll(listeners));
-		return doc;
+		document.onDidDispose.event(() => this.disposeAll(listeners));
+		return document;
 	}
 
 	/**
@@ -115,7 +96,7 @@ class EditorProvider {
 	/**
 	 * @param {Document} document 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {Thenable<void>}
+	 * @returns {void}
 	 */
 	saveCustomDocument(document, cancellation) {
 		//TODO: fetch data from webview then save
@@ -126,28 +107,28 @@ class EditorProvider {
 	 * @param {Document} document 
 	 * @param {vscode.Uri} destination 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {Thenable<void>}
+	 * @returns {void}
 	 */
 	saveCustomDocumentAs(document, destination, cancellation) {
 		//TODO: fetch data from webview then save as
-		return document.saveAs(destination, cancellation);
+		document.saveAs(destination, cancellation);
 	}
 
 	/**
 	 * @param {Document} document 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {Thenable<void>}
+	 * @returns {void}
 	 */
 	revertCustomDocument(document, cancellation) {
 		//TODO
-		return document.revert(cancellation);
+		document.revert(cancellation);
 	}
 
 	/**
 	 * @param {Document} document 
 	 * @param {vscode.CustomDocumentBackupContext} context 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {Thenable<vscode.CustomDocumentBackup>}
+	 * @returns {vscode.CustomDocumentBackup}
 	 */
 	backupCustomDocument(document, context, cancellation) {
 		//TODO
@@ -271,21 +252,24 @@ class EditorProvider {
 		console.log("receive data in editor:", message)
 		switch (message.command) {
 			case 'ready':
-				//const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
-				if (document.documentData.length === 0) {
-					this.postMessage(webviewPanel, 'select_schema', "empty");
+				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
+				try {
+					if (document.file.initialized === false) {
+						this.postMessage(webviewPanel, 'select_schema', "empty");
+					} else {
+						this.postMessage(webviewPanel, 'show_datagrid', {
+							type: document.file.type,
+							value: document.file.value,
+						});
+					}
+				} catch (error) {
+					//TODO: show error message
 				}
-				/* else show datagrid // try catch
-				this.postMessage(webviewPanel, 'init', {
-					value: document.documentData,
-					editable,
-				});*/
 				return;
 
 			case 'schema':
-				const schemaPath = message.body;
 				try {
-					const messages = document.loadSchema(schemaPath);
+					const messages = document.file.loadSchema(message.body);
 					if (messages.length === 0) {
 						this.postMessage(webviewPanel, 'select_schema', "invalid");
 					} else {
@@ -297,22 +281,16 @@ class EditorProvider {
 				return;
 
 			case 'message':
-				// save document data
-				const header = new Map();
-				const relativePath = path.relative(document.uri.path, document.schemaPath);
-				header.set("schema", relativePath);
-				header.set("message", message.body.message);
-				header.set("container", message.body.container);
-				const type = document.schema.getMessage(message.body.message);
-				Disorder.write(header, type, new Map(), document.uri.path);
+				document.file.setMessage(message.body.message, message.body.container);
+				document.file.write(new Map());
 				this.postMessage(webviewPanel, 'show_datagrid', {
-					schema: document.schema,
-					message: message.body.message,
-					containe: message.body.container,
+					type: document.file.type,
+					value: document.file.value,
 				});
 				return;
 
 			case 'edit':
+				//TODO
 				document.edit(message.body);
 				return;
 		}

@@ -1,15 +1,13 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-
+const fs = require('fs')
 const vscode = require('vscode')
-const { EditorProvider } = require('./editor')
 const { Edit } = require('./edit');
-const { Schema } = require('../disorder/schema');
+const { File } = require('../disorder/file');
 
 /**
  * @public
  * @property {vscode.Uri} uri
- * @property {EditorProvider} editorProvider
- * @property {Uint8Array} documentData
+ * @property {File} file
  * @property {boolean} disposed
  * @property {vscode.Disposable[]} disposables
  * @property {Edit[]} edits
@@ -22,30 +20,16 @@ class Document {
 
 	/**
 	 * @param {vscode.Uri} uri
-	 * @param {EditorProvider} editorProvider
 	 */
-	constructor(uri, editorProvider) {
+	constructor(uri) {
 		/**
 		 * @type {vscode.Uri}
 		 */
 		this.uri = uri;
 		/**
-		 * @type {EditorProvider}
+		 * @type {File}
 		 */
-		this.editorProvider = editorProvider;
-		/**
-		 * @type {Uint8Array}
-		 */
-		this.documentData = undefined;
-		/**
-		 * @type {Schema}
-		 */
-		this.schema = new Schema();
-		/**
-		 * @type {string}
-		 */
-		this.schemaPath = '';
-
+		this.file = new File(uri.path);
 		/**
 		 * @type {boolean}
 		 */
@@ -85,24 +69,14 @@ class Document {
 	/**
 	 * @param {vscode.Uri} uri
 	 * @param {string | undefined} backupId
-	 * @param {EditorProvider} editorProvider
-	 * @returns {Promise<Document>}
+	 * @returns {Document}
 	 */
-	static async create(uri, backupId, editorProvider) {
+	static create(uri, backupId) {
 		// If we have a backup, read that. Otherwise read the resource from the workspace
-		const dataFile = typeof backupId === 'string' ? vscode.Uri.parse(backupId) : uri;
-		const document = new Document(dataFile, editorProvider);
-		await document.readFile();
+		const filePath = typeof backupId === 'string' ? vscode.Uri.parse(backupId) : uri;
+		const document = new Document(filePath);
+		document.load();
 		return document;
-	}
-
-	/**
-	 * @param {string} path
-	 * @returns {string[]}
-	 */ 
-	loadSchema(path) {
-		this.schemaPath = path;
-		return this.schema.load(path);
 	}
 
 	dispose() {
@@ -150,46 +124,44 @@ class Document {
 	}
 
 	/**
-	 * @returns {Promise<void>}
+	 * @returns {void}
 	 */
-	async readFile() {
-		if (this.uri.scheme === 'untitled') {
-			this.documentData = new Uint8Array();
-		}
-		this.documentData = new Uint8Array(await vscode.workspace.fs.readFile(this.uri));
+	load() {
+		this.file.read();
 	}
 
 	/**
 	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {Promise<void>}
+	 * @returns {void}
 	 */
-	async save(cancellation) {
-		await this.saveAs(this.uri, cancellation);
+	save(cancellation) {
+		this.saveAs(this.uri, cancellation);
 		this.savedEdits = Array.from(this.edits);
 	}
 
 	/**
 	 * @param {vscode.Uri} targetResource
 	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {Promise<void>}
+	 * @returns {void}
 	 */
-	async saveAs(targetResource, cancellation) {
-		const fileData = await this.editorProvider.getFileData(this);
+	saveAs(targetResource, cancellation) {
+		this.uri = targetResource;
 		if (cancellation.isCancellationRequested) {
 			return;
 		}
-		await vscode.workspace.fs.writeFile(targetResource, fileData);
+		this.file.filePath = this.uri.path;
+		this.file.write(this.file.value);
 	}
 
 	/**
 	 * @param {vscode.CancellationToken} _cancellation
-	 * @returns {Promise<void>}
+	 * @returns {void}
 	 */
-	async revert(_cancellation) {
-		await this.readFile();
+	revert(_cancellation) {
+		this.load();
 		this.edits = this.savedEdits;
 		this.onDidChangeDocument.fire({
-			content: this.documentData,
+			content: fs.readFileSync(this.uri.fsPath),
 			edits: this.edits,
 		});
 	}
@@ -197,10 +169,10 @@ class Document {
 	/**
 	 * @param {vscode.Uri} destination
 	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {Promise<vscode.CustomDocumentBackup>}
+	 * @returns {vscode.CustomDocumentBackup}
 	 */
-	async backup(destination, cancellation) {
-		await this.saveAs(destination, cancellation);
+	backup(destination, cancellation) {
+		this.saveAs(destination, cancellation);
 
 		return {
 			id: destination.toString(),

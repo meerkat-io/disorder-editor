@@ -1,16 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
+// @ts-ignore
 const vscode = acquireVsCodeApi();
 
-const schemaView = 0
-const messageView = 1
-const datagridView = 2
+const schemaView = 1
+const messageView = 2
+const datagridView = 3
 const currentView = ref(0)
 
 const schemaStatus = ref('empty')
 const schemaMessages = ref([])
 
+// @ts-ignore
 onMounted(window.addEventListener('message', (event) => receiveMessage(event.data)))
 
 function receiveMessage(message) {

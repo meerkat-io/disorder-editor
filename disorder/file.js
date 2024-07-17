@@ -60,7 +60,7 @@ class File {
      * @returns {string[]}
      */
     loadSchema(schemaPath) {
-        this.schemaPath = path.relative(this.filePath, schemaPath)
+        this.schemaPath = path.relative(path.dirname(this.filePath), schemaPath)
         return this.schema.load(schemaPath);
     }
 

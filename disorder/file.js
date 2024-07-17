@@ -15,7 +15,7 @@ const { Writer, Reader, ByteArray } = require('./binary');
  * @property {boolean} initialized
  */
 class File {
-    static HEADER_TYPE = new Type("map[string]");
+    static HEADER_TYPE = new Type('map[string]');
 
     /**
      * @param {string} filePath 
@@ -28,7 +28,7 @@ class File {
         /**
          * @type {string}
          */
-        this.schemaPath = "";
+        this.schemaPath = '';
         /**
          * @type {Schema}
          */
@@ -36,7 +36,7 @@ class File {
         /**
          * @type {string}
          */
-        this.message = "";
+        this.message = '';
         /**
          * @type {string}
          */

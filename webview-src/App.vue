@@ -27,6 +27,10 @@ function receiveMessage(message) {
       currentView.value = messageView
       schemaMessages.value = message.body
       break
+
+    case 'show_datagrid':
+      currentView.value = datagridView
+      break
   }
 }
 

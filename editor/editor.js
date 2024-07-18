@@ -4,6 +4,9 @@ const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
 
+//tmp
+const { Type } = require('../disorder/schema')
+
 /**
  * @public
  * @property {vscode.ExtensionContext} context
@@ -258,9 +261,14 @@ class EditorProvider {
 						this.postMessage(webviewPanel, 'select_schema', "empty");
 					} else {
 						this.postMessage(webviewPanel, 'show_datagrid', {
+							type: new Type('map[string]'),
+							value: new Map(),
+						});
+						/*
+						this.postMessage(webviewPanel, 'show_datagrid', {
 							type: document.file.type,
 							value: document.file.value,
-						});
+						});*/
 					}
 				} catch (error) {
 					//TODO: show error message

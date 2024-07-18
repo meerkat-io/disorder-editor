@@ -1,5 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Type, Node } from './node'
+
+import SchemaSelector from './components/SchemaSelector.vue'
+import MessageSelector from './components/MessageSelector.vue'
+import Cell from './components/Cell.vue'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -11,6 +16,7 @@ const currentView = ref(0)
 
 const schemaStatus = ref('empty')
 const schemaMessages = ref([])
+const nodeData = ref({})
 
 // @ts-ignore
 onMounted(window.addEventListener('message', (event) => receiveMessage(event.data)))
@@ -30,6 +36,10 @@ function receiveMessage(message) {
 
     case 'show_datagrid':
       currentView.value = datagridView
+      const node = new Node(message.body.name, message.body.type, message.body.value)
+      console.log('show datagrid in app')
+      console.log(node)
+      nodeData.value = node
       break
   }
 }
@@ -43,4 +53,5 @@ vscode.postMessage({ command: 'ready' })
     @select="(path) => vscode.postMessage({ command: 'schema', body: path })" :status="schemaStatus" />
   <message-selector v-else-if="currentView == messageView"
     @select="(message) => vscode.postMessage({ command: 'message', body: message })" :messages="schemaMessages" />
+  <cell v-else-if="currentView == datagridView" :node="nodeData" />
 </template>

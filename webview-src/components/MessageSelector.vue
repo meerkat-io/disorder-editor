@@ -14,7 +14,6 @@ function onSelect() {
     if (message.value === '' || container.value === '') {
         return
     }
-    console.log('root message:', message.value)
     buttonDisabled.value = true
     emit('select', { message: message.value, container: container.value })
 }

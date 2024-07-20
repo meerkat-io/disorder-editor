@@ -4,7 +4,7 @@ module.exports = {
         .entry("app")
         .clear()
         .add("./webview-src/main.js")
-        .add("./webview-src/node.js")
+        .add("./webview-src/shared.js")
         .add("./webview-src/app.css")
         .end()
       config.plugins.delete('html')

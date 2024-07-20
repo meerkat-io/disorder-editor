@@ -1,4 +1,3 @@
-
 /**
  * @property {string} type
  * @property {Type} reference
@@ -28,7 +27,6 @@ class Type {
  * @property {any} value
  */
 class Node {
-
     /**
      * @param {string} name 
      * @param {Type} type 
@@ -50,4 +48,44 @@ class Node {
     }
 }
 
-export { Type, Node };
+/**
+ * @property {string} status
+ * @property {string} message
+ * @property {string[]} messages
+ * @property {string} container
+ */
+class SchemaData {
+    constructor() {
+        /**
+         * @type {string}
+         */
+        this.status = SchemaStatus.NONE;
+        /**
+         * @type {string}
+         */
+        this.message = '';
+        /**
+         * @type {string[]}
+         */
+        this.messages = [];
+        /**
+         * @type {string}
+         */
+        this.container = Container.NONE;
+    }
+}
+
+const Container = {
+    NONE: 'none',
+    ARRAY: 'array',
+    MAP: 'map',
+};
+
+const SchemaStatus = {
+    NONE: 'none',
+    LOAD: 'load',
+    VALID: 'valid',
+    INVALID: 'invalid',
+};
+
+export { Type, Node, Container, SchemaStatus, SchemaData };

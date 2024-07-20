@@ -1,15 +1,15 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Type, Node } from '../node'
+
+import { ref } from 'vue'
+import { Type, Node } from '../shared'
+
+import MapTable from './MapTable.vue'
 
 const props = defineProps({
-  node: {
-    type: Node
-  }
-})
-
-onMounted(()=> {
-    console.log('show datagrid in cell');
-    console.log(props.node);
+  node: Node
 })
 </script>
+
+<template>
+  <map-table :node="node" />
+</template>

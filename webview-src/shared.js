@@ -48,33 +48,6 @@ class Node {
     }
 }
 
-/**
- * @property {string} status
- * @property {string} message
- * @property {string[]} messages
- * @property {string} container
- */
-class SchemaData {
-    constructor() {
-        /**
-         * @type {string}
-         */
-        this.status = SchemaStatus.NONE;
-        /**
-         * @type {string}
-         */
-        this.message = '';
-        /**
-         * @type {string[]}
-         */
-        this.messages = [];
-        /**
-         * @type {string}
-         */
-        this.container = Container.NONE;
-    }
-}
-
 const Container = {
     NONE: 'none',
     ARRAY: 'array',
@@ -88,4 +61,4 @@ const SchemaStatus = {
     INVALID: 'invalid',
 };
 
-export { Type, Node, Container, SchemaStatus, SchemaData };
+export { Type, Node, Container, SchemaStatus };

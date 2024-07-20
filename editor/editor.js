@@ -7,6 +7,13 @@ const { Document } = require('./document')
 //tmp
 const { Type } = require('../disorder/schema')
 
+const SchemaStatus = {
+    NONE: 'none',
+    LOAD: 'load',
+    VALID: 'valid',
+    INVALID: 'invalid',
+};
+
 /**
  * @public
  * @property {vscode.ExtensionContext} context
@@ -258,7 +265,7 @@ class EditorProvider {
 				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
 				try {
 					if (document.file.initialized === false) {
-						this.postMessage(webviewPanel, 'select_schema', "empty");
+						this.postMessage(webviewPanel, 'select_schema', SchemaStatus.LOAD);
 					} else {
 						this.postMessage(webviewPanel, 'show_datagrid', {
 							type: new Type('map[string]'),
@@ -279,12 +286,12 @@ class EditorProvider {
 				try {
 					const messages = document.file.loadSchema(message.body);
 					if (messages.length === 0) {
-						this.postMessage(webviewPanel, 'select_schema', "invalid");
+						this.postMessage(webviewPanel, 'select_schema', SchemaStatus.INVALID);
 					} else {
 						this.postMessage(webviewPanel, 'select_message', messages);
 					}
 				} catch (error) {
-					this.postMessage(webviewPanel, 'select_schema', "invalid");
+					this.postMessage(webviewPanel, 'select_schema', SchemaStatus.INVALID);
 				}
 				return;
 

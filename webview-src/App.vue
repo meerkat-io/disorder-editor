@@ -1,21 +1,24 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { SchemaStatus, Node, SchemaData } from './shared'
+import { Node } from './shared'
 
 import Schema from './components/Schema.vue'
+import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-const schema = ref(new SchemaData)
+const schema = ref('')
+const messages = ref({})
 const view = ref(0)
 const root = ref()
 
 const View = {
   NONE: 0,
   SCHEMA: 1,
-  DATA: 2,
+  MESSAGE: 2,
+  DATA: 3,
 }
 
 onMounted(() => { 
@@ -28,12 +31,12 @@ function receiveMessage(message) {
   switch (message.command) {
     case 'select_schema':
       view.value = View.SCHEMA;
-      schema.value.status = message.body
+      schema.value = message.body
       break
 
     case 'select_message':
-      view.value = View.SCHEMA;
-      schema.value.messages = message.body
+      view.value = View.MESSAGE;
+      messages.value = message.body
       break
 
     case 'show_datagrid':
@@ -50,7 +53,8 @@ vscode.postMessage({ command: 'ready' })
 
 <template>
   <schema v-if="view == View.SCHEMA"
-    @selectSchema="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })"
-    @selectMessage="(message) => vscode.postMessage({ command: 'message', message})" :schema="schema" />
+    @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema"/>
+  <message v-if="view == View.MESSAGE"
+    @select="(message) => vscode.postMessage({ command: 'message', body: message})" :messages="messages" />
   <cell v-else-if="view == View.DATA" :node="schemaMessages" />
 </template>

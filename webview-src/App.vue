@@ -11,8 +11,8 @@ const vscode = acquireVsCodeApi();
 
 const schema = ref('')
 const messages = ref({})
-const view = ref(0)
 const root = ref()
+const view = ref(0)
 
 const View = {
   NONE: 0,
@@ -48,7 +48,6 @@ function receiveMessage(message) {
 }
 
 vscode.postMessage({ command: 'ready' })
-
 </script>
 
 <template>
@@ -56,5 +55,5 @@ vscode.postMessage({ command: 'ready' })
     @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema"/>
   <message v-if="view == View.MESSAGE"
     @select="(message) => vscode.postMessage({ command: 'message', body: message})" :messages="messages" />
-  <cell v-else-if="view == View.DATA" :node="schemaMessages" />
+  <cell v-else-if="view == View.DATA" :node="root" />
 </template>

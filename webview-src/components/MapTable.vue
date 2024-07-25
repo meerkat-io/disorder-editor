@@ -20,7 +20,7 @@ function toggle() {
     <span class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
   </span>
   <table>
-    <table-header :headers="headers">
+    <table-header v-if="expanded" :headers="headers">
     </table-header>
     <tbody>
     </tbody>

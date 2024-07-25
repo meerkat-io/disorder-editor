@@ -1,17 +1,15 @@
 <script setup>
 import { SchemaStatus } from '../shared';
 
-const props = defineProps({
-    status: String
-})
-const emit = defineEmits(['select'])
+const props = defineProps(['status']);
+const emit = defineEmits(['select']);
 
 function onSelect(event) {
-    const file = event.target.files[0]
+    const file = event.target.files[0];
     if (file == null) {
-        return
+        return;
     }
-    emit('select', file.path)
+    emit('select', file.path);
 }
 </script>
 

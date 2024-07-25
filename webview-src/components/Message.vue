@@ -2,21 +2,19 @@
 import { ref } from 'vue';
 import { Container } from '../shared';
 
-const props = defineProps({
-    messages: Array
-})
+const props = defineProps(['messages']);
+const emit = defineEmits(['select']);
 
-const emit = defineEmits(['select'])
-const message = ref('')
-const container = ref('')
-const submitDisabled = ref(false)
+const message = ref('');
+const container = ref('');
+const submitDisabled = ref(false);
 
 function onSelect() {
     if (message.value === '' || container.value === '') {
-        return
+        return;
     }
-    submitDisabled.value = true
-    emit('select', { message: message.value, container: container.value })
+    submitDisabled.value = true;
+    emit('select', { message: message.value, container: container.value });
 }
 </script>
 

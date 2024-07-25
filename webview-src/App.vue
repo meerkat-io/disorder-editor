@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Node } from './shared'
 
 import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
@@ -9,10 +8,10 @@ import Cell from './components/Cell.vue'
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-const schema = ref('')
-const messages = ref({})
-const root = ref()
-const view = ref(0)
+const schema = ref('');
+const messages = ref([]);
+const root = ref();
+const view = ref(0);
 
 const View = {
   NONE: 0,
@@ -23,31 +22,29 @@ const View = {
 
 onMounted(() => { 
   // @ts-ignore
-  window.addEventListener('message', (event) => receiveMessage(event.data)) 
+  window.addEventListener('message', (event) => receiveMessage(event.data));
 })
 
 function receiveMessage(message) {
-  console.log('receiveMessage', message)
   switch (message.command) {
     case 'select_schema':
       view.value = View.SCHEMA;
-      schema.value = message.body
-      break
+      schema.value = message.body;
+      break;
 
     case 'select_message':
       view.value = View.MESSAGE;
-      messages.value = message.body
-      break
+      messages.value = message.body;
+      break;
 
     case 'show_datagrid':
       view.value = View.DATA;
-      const node = new Node(undefined, message.body.type, message.body.value)
-      root.value = node
+      root.value = message.body;
       break
   }
 }
 
-vscode.postMessage({ command: 'ready' })
+vscode.postMessage({ command: 'ready' });
 </script>
 
 <template>

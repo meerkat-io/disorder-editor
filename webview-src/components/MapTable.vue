@@ -5,8 +5,8 @@ import TableHeader from './TableHeader.vue';
 const props = defineProps(['node']);
 const expanded = ref(false);
 const headers = ref([
-  { name: 'Key', resize: true },
-  { name: 'Value', resize: true },
+  { name: 'Key', resizable: true },
+  { name: 'Value', resizable: true },
 ]);
 
 function toggle() {

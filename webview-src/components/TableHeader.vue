@@ -10,6 +10,7 @@ const collumnsWidth = ref({});
  * @param {MouseEvent} event 
  */
 function resize(name, event) {
+  console.log('resize', name)
   const startX = event.pageX
   const width = parseInt(window.getComputedStyle(collumns.value[name]).width, 10)
 
@@ -43,9 +44,9 @@ function reset(name) {
 <template>
   <thead>
     <tr>
-      <th v-for="{ name, resize } in headers" :key="name" :ref="name">
+      <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)">
         {{ name }}
-        <div v-if="resize === true" class="resizer" @mousedown="resize(name, $event)"
+        <div v-if="resizable === true" class="resizer" @mousedown="resize(name, $event)"
           @dblclick="reset(name)"></div>
       </th>
     </tr>
@@ -62,6 +63,7 @@ function reset(name) {
   cursor: col-resize;
   user-select: none;
   z-index: 999;
+  border: 2px solid;
 }
 
 th {

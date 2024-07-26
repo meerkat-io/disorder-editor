@@ -1,7 +1,5 @@
 .vscode-light {
-    --struct-color: #267F99;
-    --map-color: #267F99;
-    --array-color: #795E26;
+    --badge-color: #267F99;
     --string-color: #A31515;
     --number-color: #098658;
     --literal-color: #0000FF;
@@ -9,9 +7,7 @@
   }
   
   .vscode-dark, .vscode-high-contrast {
-    --struct-color: #4EC9B0;
-    --map-color: #4EC9B0;
-    --array-color: #DCDCAA;
+    --badge-color: #c9c9c9;
     --string-color: #CE9178;
     --number-color: #B5CEA8;
     --literal-color: #569CD6;
@@ -26,6 +22,7 @@
   table {
     margin: 2px 0;
     border-collapse: collapse;
+    border: 1px solid;
   }
   td, th {
     padding: 2px 4px;
@@ -42,6 +39,7 @@
     display: inline-block;
     border-radius: 0.5em;
     color: 	var(--vscode-editor-background);
+    background-color: var(--badge-color);
   }
   td.index.array::after, .array.badge {
     background-color: var(--array-color);

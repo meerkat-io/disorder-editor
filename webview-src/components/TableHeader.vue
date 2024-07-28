@@ -12,10 +12,8 @@ const header = ref(null)
  * @param {MouseEvent} event 
  */
 function resize(name, event) {
-  console.log('resize:', name)
   const startX = event.pageX
   const width = parseInt(window.getComputedStyle(collumns.value[name]).width, 10)
-  console.log('width:', width)
 
   /**
    * @param {MouseEvent} e 
@@ -23,7 +21,6 @@ function resize(name, event) {
   function setSize(e) {
     const movedX = e.pageX - startX
     collumnsWidth.value[name] = width + movedX + 'px'
-    console.log('currentWidth:', width + movedX + 'px')
   }
 
   document.addEventListener('mousemove', setSize)
@@ -46,7 +43,6 @@ function reset(name) {
 onMounted(() => {
   let observer = new ResizeObserver(
     entries => {
-      console.log("=======", entries[0].contentRect.height)
       headerHeight.value = entries[0].contentRect.height + 'px';
     }
   );
@@ -59,7 +55,7 @@ onMounted(() => {
   <thead ref="header">
     <tr>
       <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)"
-        :style="{ minWidth: collumnsWidth[name], width: collumnsWidth[name] }">
+        :style="{ minWidth: '100px', width: collumnsWidth[name] }">
         {{ name }}
         <div v-if="resizable === true" class="resizer" :style="{ height: headerHeight }"
           @mousedown="resize(name, $event)" @dblclick="reset(name)"></div>
@@ -78,7 +74,6 @@ onMounted(() => {
   cursor: col-resize;
   user-select: none;
   z-index: 999;
-  border: 1px solid;
 }
 
 th {

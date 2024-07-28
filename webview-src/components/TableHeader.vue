@@ -1,18 +1,21 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const props = defineProps(['headers']);
 const collumns = ref({});
 const collumnsWidth = ref({});
+const headerHeight = ref('0px')
+const header = ref(null)
 
 /**
  * @param {string} name
  * @param {MouseEvent} event 
  */
 function resize(name, event) {
-  console.log('resize', name)
+  console.log('resize:', name)
   const startX = event.pageX
   const width = parseInt(window.getComputedStyle(collumns.value[name]).width, 10)
+  console.log('width:', width)
 
   /**
    * @param {MouseEvent} e 
@@ -20,6 +23,7 @@ function resize(name, event) {
   function setSize(e) {
     const movedX = e.pageX - startX
     collumnsWidth.value[name] = width + movedX + 'px'
+    console.log('currentWidth:', width + movedX + 'px')
   }
 
   document.addEventListener('mousemove', setSize)
@@ -39,15 +43,26 @@ function reset(name) {
   collumnsWidth.value[name] = null
 }
 
+onMounted(() => {
+  let observer = new ResizeObserver(
+    entries => {
+      console.log("=======", entries[0].contentRect.height)
+      headerHeight.value = entries[0].contentRect.height + 'px';
+    }
+  );
+  observer.observe(header.value);
+}
+);
 </script>
 
 <template>
-  <thead>
+  <thead ref="header">
     <tr>
-      <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)">
+      <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)"
+        :style="{ minWidth: collumnsWidth[name], width: collumnsWidth[name] }">
         {{ name }}
-        <div v-if="resizable === true" class="resizer" @mousedown="resize(name, $event)"
-          @dblclick="reset(name)"></div>
+        <div v-if="resizable === true" class="resizer" :style="{ height: headerHeight }"
+          @mousedown="resize(name, $event)" @dblclick="reset(name)"></div>
       </th>
     </tr>
   </thead>
@@ -63,7 +78,7 @@ function reset(name) {
   cursor: col-resize;
   user-select: none;
   z-index: 999;
-  border: 2px solid;
+  border: 1px solid;
 }
 
 th {

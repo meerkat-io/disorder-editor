@@ -1,94 +1,34 @@
-.vscode-light {
-    --badge-color: #267F99;
-    --string-color: #A31515;
-    --number-color: #098658;
-    --literal-color: #0000FF;
-    --identifier-color: #001080;
-  }
-  
-  .vscode-dark, .vscode-high-contrast {
-    --badge-color: #c9c9c9;
-    --string-color: #CE9178;
-    --number-color: #B5CEA8;
-    --literal-color: #569CD6;
-    --identifier-color: #9CDCFE;
-  }
-  
-  body {
-    font-family: var(--vscode-editor-font-family);
-    font-weight: var(--vscode-editor-font-weight);
-    font-size: var(--vscode-editor-font-size);
-  }
-  table {
-    margin: 2px 0;
-    border-collapse: collapse;
-    border: 2px solid;
-  }
-  td, th {
-    padding: 2px 4px;
-    vertical-align: baseline;
-    border: 1px solid var(--vscode-editor-foreground);
-  }
-  .index, .collapsed {
-    white-space: nowrap;
-  }
-  .badge {
-    padding: 1px 3px;
-    display: inline-block;
-    border-radius: 0.5em;
-    color: 	var(--vscode-editor-background);
-    background-color: var(--badge-color);
-  }
-  td.index.array::after, .array.badge {
-    background-color: var(--array-color);
-  }
-  .value.string {
-    color: var(--string-color);
-  }
-  .value.number {
-    color: var(--number-color);
-  }
-  .value.boolean {
-    color: var(--literal-color);
-  }
-  .value.null::before {
-    content: 'null';
-    color: var(--literal-color);
-  }
-  .array-el:not(.object) .value {
-    width: 100%;
-  }
-  .expand {
-    display: inline-block;
-    text-align: center;
-    width: 1em;
-    margin-left: 4px;
-    cursor: pointer;
-    border: 1px solid;
-    border-radius: 3px;
-  }
-  th.member {
-    border: 1px solid var(--vscode-editor-foreground);
-    border-top: 2px solid var(--vscode-editor-foreground);
-    border-bottom: 2px solid var(--vscode-editor-foreground);
-  }
-  th.key, th.member {
-    color: var(--identifier-color);
-    text-align: left;
-  }
-  table.object {
-    border: 2px solid;
-  }
-  th.index:first-child, th:last-child, td.index, td.member:last-child, td.value:last-child {
-    border-right: 2px solid var(--vscode-editor-foreground);
-  }
-  tr.array-el:last-child td.member, tr.array-el:last-child td.value {
-    border-bottom: 2px solid var(--vscode-editor-foreground);
-  }
-  th.object.key, td.object.element {
-    border-top: 0;
-  }
-  tr.object-hdr th {
-    padding: 0;
-    border: 0;
-  }
+body {
+  font-family: var(--vscode-editor-font-family);
+  font-weight: var(--vscode-editor-font-weight);
+  font-size: var(--vscode-editor-font-size);
+}
+table {
+  margin: 2px 0;
+  border-collapse: collapse;
+  border: 2px solid;
+}
+td, th {
+  padding: 2px 4px;
+  vertical-align: baseline;
+  border: 1px solid var(--vscode-editor-foreground);
+}
+.collapsed {
+  white-space: nowrap;
+}
+.badge {
+  padding: 1px 3px;
+  display: inline-block;
+  border-radius: 0.5em;
+  color: 	var(--vscode-editor-background);
+  background-color: var(--vscode-editor-foreground);
+}
+.expand {
+  display: inline-block;
+  text-align: center;
+  width: 1em;
+  margin-left: 4px;
+  cursor: pointer;
+  border: 1px solid;
+  border-radius: 3px;
+}

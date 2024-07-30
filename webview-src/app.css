@@ -17,11 +17,11 @@ td, th {
   white-space: nowrap;
 }
 .badge {
-  padding: 1px 3px;
+  padding: 1px 0.5em;
   display: inline-block;
   border-radius: 0.5em;
-  color: 	var(--vscode-editor-background);
-  background-color: var(--vscode-editor-foreground);
+  color: 	var(--vscode-badge-foreground);
+  background-color: var(--vscode-badge-background);
 }
 .expand {
   display: inline-block;

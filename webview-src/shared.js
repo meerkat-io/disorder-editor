@@ -19,6 +19,19 @@ class Type {
     static MAP = 'map';
     static ENUM = 'enum';
     static STRUCT = 'struct';
+
+    /**
+     * @param {string} type 
+     */
+    constructor(type) {
+        if (typeof type !== 'string') {
+            throw new Error('Type must be a string');
+        }
+        /**
+         * @type {string}
+         */
+        this.type = type;
+    }
 }
 
 const Container = {

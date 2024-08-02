@@ -40,6 +40,7 @@ function receiveMessage(message) {
     case 'show_datagrid':
       view.value = View.DATA;
       root.value = message.body;
+      console.log("root:", root.value)
       break
   }
 }

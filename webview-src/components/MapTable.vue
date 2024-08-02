@@ -39,7 +39,7 @@ onMounted(() => {
   <table v-if="expanded">
     <table-header :headers="headers"/>
     <tbody>
-      <tr v-for="(value, key) in data" class="object member" :key="key">
+      <tr v-for="(value, key) in data" :key="key">
         <th>{{ key }}</th>
         <td><cell :element="value" /></td>
       </tr>

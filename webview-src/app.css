@@ -13,6 +13,18 @@ td, th {
   vertical-align: baseline;
   border: 1px solid var(--vscode-editor-foreground);
 }
+input {
+  width: 100%;
+  margin: 0px;
+  padding: 2px 4px;
+  vertical-align: baseline;
+  border: 0px;
+  background-color: transparent;
+  color: var(--vscode-editor-foreground);
+}
+input:focus {
+  outline: none;
+}
 .collapsed {
   white-space: nowrap;
 }

@@ -12,44 +12,41 @@ const headers = ref([
   { name: 'Key', resizable: true },
   { name: 'Value', resizable: true },
 ]);
-const data = ref(new Map());
+const data = ref([]);
 const node = toRef(props, 'node');
-const bottomKey = ref(null)
-const bottomValue = ref(null)
 
 function toggle() {
   expanded.value = !expanded.value;
 }
 
 onMounted(() => {
-  console.log("node in map-table:", node.value);
-  console.log(node.value.type.reference)
-  for (let [key, value] of node.value.value) {
-    data.value.set(key, value);
+  console.log('node in map-table:', node.value);
+  if (node.value.value == null) {
+    node.value.value = {};
+  }
+  for (let [key, value] of Object.entries(node.value.value)) {
+    data.value.push({ key, value });
+  }
+  if (data.value.length == 0) {
+    data.value.push({ key: '', value: '' });
   }
 });
 </script>
 
 <template>
   <span class="collapsed">
-    <span class="badge">Map[{{ node.value.length }}]</span>
+    <span class="badge">Map[{{ data.length }}]</span>
     <span class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
   </span>
   <table v-if="expanded">
     <table-header :headers="headers" />
     <tbody>
-      <tr v-for="(value, key) in data" :key="key">
-        <th>{{ key }}</th>
+      <tr v-for="item in data" :key="item.key">
         <td>
-          <cell :element="value" />
+          <value :node="{ type: new Type(Type.STRING), value: item.key }" />
         </td>
-      </tr>
-      <tr>
-        <td :ref="bottomKey">
-          <cell :node="{ type: new Type(Type.STRING) }" />
-        </td>
-        <td :ref="bottomValue">
-          <cell :node="{ type: node.type.reference }" />
+        <td>
+          <cell :node="{ type: node.type.reference, value: item.value }" />
         </td>
       </tr>
     </tbody>

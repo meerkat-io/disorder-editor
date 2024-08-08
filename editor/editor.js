@@ -269,7 +269,7 @@ class EditorProvider {
 					} else {
 						this.postMessage(webviewPanel, 'show_datagrid', {
 							type: new Type('map[string]'),
-							value: new Map(),
+							value: { 'key1': 'value1', 'key2': 'value2' },
 						});
 						/*
 						this.postMessage(webviewPanel, 'show_datagrid', {

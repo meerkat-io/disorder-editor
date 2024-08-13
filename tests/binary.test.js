@@ -137,17 +137,12 @@ test('read and write enum', () => {
     schema.load('./tests/data/enum.yaml');
 
     const enumType = schema.getEnum('test.color');
-    const enumReference = new Type(Type.ENUM_REFERENCE);
-    enumReference.reference = enumType;
 
     const writer = new Writer();
     writer.write('blue', enumType);
-    writer.write('red', enumReference);
 
     const reader = new Reader(writer.bytes);
     expect(reader.read()).toBe('blue');
-    expect(reader.read()).toBe('red');
-
     expect(() => writer.write('white', schema.getEnum('test.color'))).toThrow(new Error("value white is not a enum of [red,green,blue]"));
 });
 
@@ -156,9 +151,9 @@ test('read and write array & map', () => {
     const arrayType = new Type(Type.ARRAY);
     arrayType.reference = new Type(Type.STRING);
 
-    const map = new Map();
-    map.set('foo', 'hello');
-    map.set('bar', 'world');
+    const map = {};
+    map['foo'] = 'hello';
+    map['bar'] = 'world';
     const mapType = new Type(Type.MAP);
     mapType.reference = new Type(Type.STRING);
 
@@ -171,61 +166,62 @@ test('read and write array & map', () => {
     assert.deepEqual(reader.read(), map);
 
     const zeroArray = [];
-    const zeroMap = new Map();
+    const zeroMap = {};
     writer.write(zeroArray, arrayType);
     writer.write(zeroMap, mapType);
     assert.deepEqual(reader.read(), zeroArray);
     assert.deepEqual(reader.read(), zeroMap);
 });
 
-test('read and write message', () => {
+test('read and write struct', () => {
     const schema = new Schema();
     schema.load('./tests/data/schema.yaml');
 
     const structType = schema.getMessage('test.object');
-    const structReference = new Type(Type.STRUCT_REFERENCE);
-    structReference.reference = structType;
 
     const time = new Date().getTime();
-    const number = new Map();
-    number.set('value', 789);
-    const object = new Map();
-    object.set('bool_field', true);
-    object.set('int_field', 123);
-    object.set('string_field', 'foo');
-    object.set('bytes_field', new Uint8Array([4, 5, 6]));
-    object.set('enum_field', 'blue');
-    object.set('time_field', new Date(time));
-    object.set('obj_field', number);
-    object.set('int_array', [1, 2, 3]);
-    object.set('int_map', new Map());
-    object.get('int_map').set('foo', 1);
-    object.get('int_map').set('bar', 2);
-    object.set('obj_array', [number, number]);
-    object.set('obj_map', new Map());
-    object.get('obj_map').set('foo', number);
-    object.get('obj_map').set('bar', number);
+    const number = {};
+    number['value'] = 789;
+    const object = {};
+    object['bool_field'] = true;
+    object['int_field'] = 123;
+    object['string_field'] = 'foo';
+    object['bytes_field'] = new Uint8Array([4, 5, 6]);
+    object['enum_field'] = 'blue';
+    object['time_field'] = new Date(time);
+    object['obj_field'] = number;
+    object['int_array'] = [1, 2, 3];
+    object['int_map'] = {};
+    object['int_map']['foo'] = 1;
+    object['int_map']['bar'] = 2;
+    object['obj_array'] = [number, number];
+    object['obj_map'] = {};
+    object['obj_map']['foo'] = number;
+    object['obj_map']['bar'] = number;
+    object['nested'] = {}
+    object['nested']['level0'] = {}
+    object['nested']['level0']['level1'] = []
+    object['nested']['level0']['level1'][0] = []
+    object['nested']['level0']['level1'][0][0] = {}
+    object['nested']['level0']['level1'][0][0]['level2'] = 'red'
 
     const writer = new Writer();
     writer.write(object, structType);
-    writer.write(object, structReference);
 
     const reader = new Reader(writer.bytes);
     assert.deepEqual(reader.read(), object);
-    assert.deepEqual(reader.read(), object);
 });
 
-test('read and write loop message', () => {
-    //TODO: test loop message
+test('read and write loop struct', () => {
     const schema = new Schema();
     schema.load('./tests/data/loop_object.yaml');
 
     const loopType = schema.getMessage('test.loop');
-    const loopObject = new Map();
-    loopObject.set('id', 1);
-    loopObject.set('sub', new Map());
-    loopObject.get('sub').set('id', 2);
-    loopObject.get('sub').set('sub', new Map());
+    const loopObject = {};
+    loopObject['id'] = 1;
+    loopObject['sub'] = {};
+    loopObject['sub']['id'] = 2;
+    loopObject['sub']['sub'] = {};
 
     const writer = new Writer();
     writer.write(loopObject, loopType);

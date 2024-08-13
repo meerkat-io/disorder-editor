@@ -1,7 +1,7 @@
 /**
  * @property {string} type
  * @property {Type} reference
- * @property {Map<string, Type>} fields
+ * @property {Object} fields
  * @property {string[]} enums
  */
 class Type {

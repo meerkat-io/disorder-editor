@@ -269,7 +269,7 @@ class EditorProvider {
 					} else {
 						this.postMessage(webviewPanel, 'show_datagrid', {
 							type: new Type('map[string]'),
-							value: { 'key1': 'value1', 'key2': 'value2' },
+							value: { 'key1': 'value1', 'key2': 'value2' }
 						});
 						/*
 						this.postMessage(webviewPanel, 'show_datagrid', {
@@ -297,7 +297,7 @@ class EditorProvider {
 
 			case 'message':
 				document.file.setMessage(message.body.message, message.body.container);
-				document.file.write(new Map());
+				document.file.write({});
 				this.postMessage(webviewPanel, 'show_datagrid', {
 					type: document.file.type,
 					value: document.file.value,

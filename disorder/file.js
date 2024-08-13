@@ -94,10 +94,10 @@ class File {
     write(value) {
         this.value = value;
 
-        const header = new Map();
-        header.set(HeaderName.SCHEMA, this.schemaPath);
-        header.set(HeaderName.MESSAGE, this.message);
-        header.set(HeaderName.CONTAINER, this.container);
+        const header = {};
+        header[HeaderName.SCHEMA] = this.schemaPath;
+        header[HeaderName.MESSAGE] = this.message;
+        header[HeaderName.CONTAINER] = this.container;
 
         const writer = new Writer();
         writer.write(header, File.HEADER_TYPE);

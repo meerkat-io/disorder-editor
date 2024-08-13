@@ -5,7 +5,7 @@ const yaml = require('js-yaml')
 /**
  * @property {string} type
  * @property {Type} reference
- * @property {Map<string, Type>} fields
+ * @property {Object} fields
  * @property {string[]} enums
  */
 class Type {
@@ -23,10 +23,7 @@ class Type {
     static MAP = 'map';
 
     static ENUM = 'enum';
-    static ENUM_REFERENCE = 'enum_reference';
-
     static STRUCT = 'struct';
-    static STRUCT_REFERENCE = 'struct_reference';
 
     static primaryTypes = [Type.BOOL, Type.INT, Type.LONG, Type.FLOAT, Type.DOUBLE, Type.BYTES,
         Type.STRING, Type.TIMESTAMP];
@@ -50,7 +47,7 @@ class Type {
          */
         this.reference = undefined;
         /**
-         * @type {Map<string, Type>}
+         * @type {Object}
          */
         this.fields = undefined;
         /**
@@ -67,7 +64,7 @@ class Type {
             this.reference = new Type(this.type.substring(4, this.type.length - 1));
             this.type = Type.MAP;
         } else if (this.type === Type.STRUCT) {
-            this.fields = new Map();
+            this.fields = {};
         } else if (this.type === Type.ENUM) {
             this.enums = [];
         } else if (!validateQualifiedName(this.type)) {
@@ -223,7 +220,7 @@ class Schema {
                         throw new Error(`Schema ${filePath} message ${messageName} field name "${fieldName}" is duplicated`);
                     }
                     const fieldType = fields[fieldName];
-                    struct.fields.set(fieldName, new Type(fieldType));
+                    struct.fields[fieldName] = new Type(fieldType);
                     fieldsSet.add(fieldName);
                 }
                 this.messages.set(qualifiedName, struct);
@@ -294,9 +291,13 @@ class Schema {
     resovle() {
         for (const [packageName, messages] of this.packageMessages.entries()) {
             for (const message of messages) {
-                for (const fieldType of message.fields.values()) {
+                for (const [fieldName, fieldType] of Object.entries(message.fields)) {
                     let type = fieldType;
+                    let hasContainer = false;
+                    let containerType = undefined;
                     while (type.type === Type.ARRAY || type.type === Type.MAP) {
+                        hasContainer = true;
+                        containerType = type;
                         type = type.reference;
                     }
                     if (!Type.isPrimary(type.type)) {
@@ -305,11 +306,17 @@ class Schema {
                             qualified = `${packageName}.${qualified}`;
                         }
                         if (this.enums.has(qualified)) {
-                            type.type = Type.ENUM_REFERENCE;
-                            type.reference = this.enums.get(qualified);
+                            if (hasContainer) {
+                                containerType.reference = this.enums.get(qualified);
+                            } else {
+                                message.fields[fieldName] = this.enums.get(qualified);
+                            }
                         } else if (this.messages.has(qualified)) {
-                            type.type = Type.STRUCT_REFERENCE;
-                            type.reference = this.messages.get(qualified);
+                            if (hasContainer) {
+                                containerType.reference = this.messages.get(qualified);
+                            } else {
+                                message.fields[fieldName] = this.messages.get(qualified);
+                            }
                         } else {
                             throw new Error(`Type "${type.reference}" is not defined`);
                         }

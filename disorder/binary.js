@@ -39,10 +39,7 @@ const TypeTag = new Map([
     [Type.MAP, Tag.ObjectStart],
 
     [Type.ENUM, Tag.Enum],
-    [Type.ENUM_REFERENCE, Tag.Enum],
-
-    [Type.STRUCT, Tag.ObjectStart],
-    [Type.STRUCT_REFERENCE, Tag.ObjectStart]
+    [Type.STRUCT, Tag.ObjectStart]
 ]);
 
 /**
@@ -416,12 +413,12 @@ class Reader {
                 return array;
 
             case Tag.ObjectStart:
-                const map = new Map();
+                const map = {};
                 elementTag = this.readTag();
                 while (elementTag !== Tag.ObjectEnd) {
                     const key = this.readName();
                     const value = this.read(elementTag);
-                    map.set(key, value);
+                    map[key] = value;
                     elementTag = this.readTag();
                 }
                 return map;
@@ -535,8 +532,6 @@ class Writer {
                 this.bytes.writeLong(BigInt(value.getTime()));
                 break;
 
-            case Type.ENUM_REFERENCE:
-                type = type.reference;
             case Type.ENUM:
                 if (typeof value !== 'string') {
                     throw new Error(`value ${value} is not a enum`);
@@ -558,24 +553,22 @@ class Writer {
                 break;
 
             case Type.MAP:
-                if (!(value instanceof Map)) {
-                    throw new Error(`value ${value} is not a map`);
+                if (!(typeof value === 'object')) {
+                    throw new Error(`value ${value} is not a object`);
                 }
-                for (const [key, element] of value.entries()) {
+                for (const [key, element] of Object.entries(value)) {
                     this.write(element, type.reference, key);
                 }
                 this.writeTag(Tag.ObjectEnd);
                 break;
 
-            case Type.STRUCT_REFERENCE:
-                type = type.reference;
             case Type.STRUCT:
-                if (!(value instanceof Map)) {
+                if (!(typeof value === 'object')) {
                     throw new Error(`value ${value} is not a struct`);
                 }
-                for (const [key, element] of type.fields.entries()) {
-                    if (value.has(key)) {
-                        this.write(value.get(key), element, key);
+                for (const [key, element] of Object.entries(value)) {
+                    if (type.fields.hasOwnProperty(key)) {
+                        this.write(element, type.fields[key], key);
                     }
                 }
                 this.writeTag(Tag.ObjectEnd);

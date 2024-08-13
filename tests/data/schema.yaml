@@ -21,12 +21,19 @@ messages:
     obj_array: array[sub]
     obj_map: map[sub]
     nested: map[map[array[array[map[color]]]]]
+    sub: sub0
   data:
     number_data: int
     string_data: string
     bool_data: bool
     color_data: color
     time_data: timestamp
+  sub0:
+    sub: sub1
+  sub1:
+    sub: sub2
+  sub2:
+    value: int
 
 enums:
   color:

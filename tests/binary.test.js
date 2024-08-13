@@ -204,6 +204,10 @@ test('read and write struct', () => {
     object['nested']['level0']['level1'][0] = []
     object['nested']['level0']['level1'][0][0] = {}
     object['nested']['level0']['level1'][0][0]['level2'] = 'red'
+    object['sub'] = {}
+    object['sub']['sub'] = {}
+    object['sub']['sub']['sub'] = {}
+    object['sub']['sub']['sub']['value'] = 456
 
     const writer = new Writer();
     writer.write(object, structType);
@@ -212,20 +216,7 @@ test('read and write struct', () => {
     assert.deepEqual(reader.read(), object);
 });
 
-test('read and write loop struct', () => {
-    const schema = new Schema();
-    schema.load('./tests/data/loop_object.yaml');
-
-    const loopType = schema.getMessage('test.loop');
-    const loopObject = {};
-    loopObject['id'] = 1;
-    loopObject['sub'] = {};
-    loopObject['sub']['id'] = 2;
-    loopObject['sub']['sub'] = {};
-
-    const writer = new Writer();
-    writer.write(loopObject, loopType);
-
-    const reader = new Reader(writer.bytes);
-    assert.deepEqual(reader.read(), loopObject);
+test('loop struct is not allowed', () => {
+    //TODO check loop struct
+    //TODO check other invalid schema
 });

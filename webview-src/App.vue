@@ -21,7 +21,6 @@ const View = {
 }
 
 onMounted(() => {
-    // @ts-ignore
     window.addEventListener('message', (event) => receiveMessage(event.data));
 })
 

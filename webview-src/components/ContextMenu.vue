@@ -1,10 +1,11 @@
 <script setup>
 
-import { toRef } from 'vue'
+import { ref, toRef, onMounted, onBeforeUnmount } from 'vue'
 import { ContextMenuAction } from '../shared.js';
 
 const props = defineProps(['visible', 'location']);
 
+const contextMenu = ref(null)
 const visible = toRef(props, 'visible');
 
 function close() {
@@ -18,10 +19,25 @@ function action(action) {
     console.log('action:', action);
     close();
 }
+
+function delectClickOutside(event) {
+    if (!contextMenu.value.contains(event.target)) {
+        close();
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('click', delectClickOutside);
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', delectClickOutside);
+})
 </script>
 
 <template>
-    <div class="context-menu" v-show="visible" tabindex="-1" v-click-outside="close" @contextmenu.capture.prevent>
+    <div class="context-menu" ref="contextMenu" v-show="visible" tabindex="-1" v-click-outside="close"
+        @contextmenu.capture.prevent>
         <ul>
             <li @click="action(ContextMenuAction.INSERT_ABOVE)">Insert row above</li>
             <li @click="action(ContextMenuAction.DELETE)">Delete row</li>
@@ -29,7 +45,6 @@ function action(action) {
         </ul>
     </div>
 </template>
-
 
 <style scoped>
 .context-menu {

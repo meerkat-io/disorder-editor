@@ -47,4 +47,10 @@ const SchemaStatus = {
     INVALID: 'invalid',
 };
 
-export { Type, Container, SchemaStatus };
+const ContextMenuAction = {
+    INSERT_ABOVE: 'insert_above',
+    INSERT_BELOW: 'insert_below',
+    DELETE: 'delete',
+}
+
+export { Type, Container, SchemaStatus, ContextMenuAction };

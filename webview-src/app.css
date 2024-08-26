@@ -1,46 +1,54 @@
 body {
-  font-family: var(--vscode-editor-font-family);
-  font-weight: var(--vscode-editor-font-weight);
-  font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--vscode-editor-font-size);
 }
+
 table {
-  margin: 2px 0;
-  border-collapse: collapse;
-  border: 2px solid;
+    margin: 2px 0;
+    border-collapse: collapse;
+    border: 2px solid;
 }
-td, th {
-  padding: 2px 4px;
-  vertical-align: baseline;
-  border: 1px solid var(--vscode-editor-foreground);
+
+td,
+th {
+    padding: 2px 4px;
+    vertical-align: baseline;
+    border: 1px solid var(--vscode-editor-foreground);
 }
+
 input {
-  width: 100%;
-  margin: 0px;
-  padding: 2px 4px;
-  vertical-align: baseline;
-  border: 0px;
-  background-color: transparent;
-  color: var(--vscode-editor-foreground);
+    width: 100%;
+    margin: 0px;
+    padding: 2px 4px;
+    vertical-align: baseline;
+    border: 0px;
+    background-color: transparent;
+    color: var(--vscode-editor-foreground);
 }
+
 input:focus {
-  outline: none;
+    outline: none;
 }
+
 .collapsed {
-  white-space: nowrap;
+    white-space: nowrap;
 }
+
 .badge {
-  padding: 1px 0.5em;
-  display: inline-block;
-  border-radius: 0.5em;
-  color: 	var(--vscode-badge-foreground);
-  background-color: var(--vscode-badge-background);
+    padding: 1px 0.5em;
+    display: inline-block;
+    border-radius: 0.5em;
+    color: var(--vscode-badge-foreground);
+    background-color: var(--vscode-badge-background);
 }
+
 .expand {
-  display: inline-block;
-  text-align: center;
-  width: 1em;
-  margin-left: 4px;
-  cursor: pointer;
-  border: 1px solid;
-  border-radius: 3px;
+    display: inline-block;
+    text-align: center;
+    width: 1em;
+    margin-left: 4px;
+    cursor: pointer;
+    border: 1px solid;
+    border-radius: 3px;
 }

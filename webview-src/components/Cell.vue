@@ -10,6 +10,6 @@ const props = defineProps(['node']);
 </script>
 
 <template>
-  <map-table v-if="node.type.type == Type.MAP" :node="node" />
-  <value v-else :node="node" />
+    <map-table v-if="node.type.type == Type.MAP" :node="node" />
+    <value v-else :node="node" />
 </template>

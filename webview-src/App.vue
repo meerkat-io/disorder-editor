@@ -14,44 +14,44 @@ const root = ref();
 const view = ref(0);
 
 const View = {
-  NONE: 0,
-  SCHEMA: 1,
-  MESSAGE: 2,
-  DATA: 3,
+    NONE: 0,
+    SCHEMA: 1,
+    MESSAGE: 2,
+    DATA: 3,
 }
 
-onMounted(() => { 
-  // @ts-ignore
-  window.addEventListener('message', (event) => receiveMessage(event.data));
+onMounted(() => {
+    // @ts-ignore
+    window.addEventListener('message', (event) => receiveMessage(event.data));
 })
 
 function receiveMessage(message) {
-  switch (message.command) {
-    case 'select_schema':
-      view.value = View.SCHEMA;
-      schema.value = message.body;
-      break;
+    switch (message.command) {
+        case 'select_schema':
+            view.value = View.SCHEMA;
+            schema.value = message.body;
+            break;
 
-    case 'select_message':
-      view.value = View.MESSAGE;
-      messages.value = message.body;
-      break;
+        case 'select_message':
+            view.value = View.MESSAGE;
+            messages.value = message.body;
+            break;
 
-    case 'show_datagrid':
-      view.value = View.DATA;
-      root.value = message.body;
-      console.log("root:", root.value)
-      break
-  }
+        case 'show_datagrid':
+            view.value = View.DATA;
+            root.value = message.body;
+            console.log("root:", root.value)
+            break
+    }
 }
 
 vscode.postMessage({ command: 'ready' });
 </script>
 
 <template>
-  <schema v-if="view == View.SCHEMA"
-    @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema"/>
-  <message v-if="view == View.MESSAGE"
-    @select="(message) => vscode.postMessage({ command: 'message', body: message})" :messages="messages" />
-  <cell v-else-if="view == View.DATA" :node="root" />
+    <schema v-if="view == View.SCHEMA"
+        @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema" />
+    <message v-if="view == View.MESSAGE" @select="(message) => vscode.postMessage({ command: 'message', body: message })"
+        :messages="messages" />
+    <cell v-else-if="view == View.DATA" :node="root" />
 </template>

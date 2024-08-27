@@ -6,6 +6,7 @@ import TableHeader from './TableHeader.vue';
 import Cell from './Cell.vue';
 import Value from './Value.vue';
 import ContextMenu from './ContextMenu.vue';
+import { ContextMenuAction } from '../shared.js';
 
 const props = defineProps(['node']);
 const expanded = ref(false);
@@ -38,6 +39,17 @@ function showContextMenu(event, index) {
  */
 function handleAction(action) {
     console.log('action:', action, " and current index:", currentRow.value);
+    switch (action) {
+        case ContextMenuAction.INSERT_ABOVE:
+            data.value.splice(currentRow.value, 0, { key: '', value: '' });
+            break;
+        case ContextMenuAction.DELETE:
+            data.value.splice(currentRow.value, 1);
+            break;
+        case ContextMenuAction.INSERT_BELOW:
+            data.value.splice(currentRow.value + 1, 0, { key: '', value: '' });
+            break;
+    }
 }
 
 onMounted(() => {

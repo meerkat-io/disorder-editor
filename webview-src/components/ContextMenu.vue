@@ -36,8 +36,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="context-menu" ref="contextMenu" v-show="visible" tabindex="-1" v-click-outside="close"
-        @contextmenu.capture.prevent>
+    <div class="context-menu" ref="contextMenu" v-show="visible" tabindex="-1" :style="{ top: location.y + 'px', left: location.x + 'px' }">
         <ul>
             <li @click="action(ContextMenuAction.INSERT_ABOVE)">Insert row above</li>
             <li @click="action(ContextMenuAction.DELETE)">Delete row</li>
@@ -70,7 +69,7 @@ onBeforeUnmount(() => {
     li {
         display: block;
         position: relative;
-        padding: 2px 2px;
+        padding: 2px 8px;
         background: var(--vscode-editor-background);
         border-radius: 0;
         text-decoration: none;

@@ -15,9 +15,22 @@ const headers = ref([
 ]);
 const data = ref([]);
 const node = toRef(props, 'node');
+const contextMenuVisable = ref(false)
+const contextMenuLocation = ref({ x: 0, y: 0 });
+const currentRow = ref(-1);
 
 function toggle() {
     expanded.value = !expanded.value;
+}
+
+/**
+ * @param {MouseEvent} event 
+ * @param {number} index
+ */
+function showContextMenu(event, index) {
+    contextMenuLocation.value = { x: event.clientX, y: event.clientY };
+    contextMenuVisable.value = true;
+    currentRow.value = index;
 }
 
 onMounted(() => {
@@ -42,7 +55,7 @@ onMounted(() => {
     <table v-if="expanded">
         <table-header :headers="headers" />
         <tbody>
-            <tr v-for="item in data" :key="item.key">
+            <tr v-for="(item, index) in data" :key="item.key" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
                     <value :node="{ type: new Type(Type.STRING), value: item.key }" />
                 </td>
@@ -52,5 +65,5 @@ onMounted(() => {
             </tr>
         </tbody>
     </table>
-    <context-menu :visible="true" />
+    <context-menu :visible="contextMenuVisable" :location="contextMenuLocation" />
 </template>

@@ -4,6 +4,7 @@ import { ref, toRef, onMounted, onBeforeUnmount } from 'vue'
 import { ContextMenuAction } from '../shared.js';
 
 const props = defineProps(['visible', 'location']);
+const emit = defineEmits(['action']);
 
 const contextMenu = ref(null)
 const visible = toRef(props, 'visible');
@@ -16,7 +17,7 @@ function close() {
  * @param {string} action
  */
 function action(action) {
-    console.log('action:', action);
+    emit('action', action);
     close();
 }
 
@@ -36,7 +37,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="context-menu" ref="contextMenu" v-show="visible" tabindex="-1" :style="{ top: location.y + 'px', left: location.x + 'px' }">
+    <div class="context-menu" ref="contextMenu" v-show="visible" tabindex="-1" 
+    :style="{ top: location.y + 'px', left: location.x + 'px' }">
         <ul>
             <li @click="action(ContextMenuAction.INSERT_ABOVE)">Insert row above</li>
             <li @click="action(ContextMenuAction.DELETE)">Delete row</li>

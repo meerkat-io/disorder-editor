@@ -33,6 +33,13 @@ function showContextMenu(event, index) {
     currentRow.value = index;
 }
 
+/**
+ * @param {string} action
+ */
+function handleAction(action) {
+    console.log('action:', action, " and current index:", currentRow.value);
+}
+
 onMounted(() => {
     console.log('node in map-table:', node.value);
     if (node.value.value == null) {
@@ -65,5 +72,5 @@ onMounted(() => {
             </tr>
         </tbody>
     </table>
-    <context-menu :visible="contextMenuVisable" :location="contextMenuLocation" />
+    <context-menu :visible="contextMenuVisable" :location="contextMenuLocation" @action="(action) => handleAction(action)"/>
 </template>

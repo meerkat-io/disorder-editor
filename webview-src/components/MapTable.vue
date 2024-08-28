@@ -84,6 +84,5 @@ onMounted(() => {
             </tr>
         </tbody>
     </table>
-    <context-menu :visible="contextMenuVisable" :location="contextMenuLocation"
-        @action="(action) => handleAction(action)" />
+    <context-menu v-model="contextMenuVisable" :location="contextMenuLocation" @action="handleAction" />
 </template>

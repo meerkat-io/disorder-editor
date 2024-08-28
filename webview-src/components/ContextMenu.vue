@@ -3,27 +3,23 @@
 import { ref, toRef, onMounted, onBeforeUnmount } from 'vue'
 import { ContextMenuAction } from '../shared.js';
 
-const props = defineProps(['visible', 'location']);
+const props = defineProps(['location']);
 const emit = defineEmits(['action']);
+const visible = defineModel();
 
-const contextMenu = ref(null)
-const visible = toRef(props, 'visible');
-
-function close() {
-    visible.value = false;
-}
+const contextMenu = ref(null);
 
 /**
  * @param {string} action
  */
 function action(action) {
     emit('action', action);
-    close();
+    visible.value = false;
 }
 
 function delectClickOutside(event) {
     if (!contextMenu.value.contains(event.target)) {
-        close();
+        visible.value = false;
     }
 }
 

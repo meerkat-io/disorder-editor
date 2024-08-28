@@ -6,7 +6,7 @@ import TableHeader from './TableHeader.vue';
 import Cell from './Cell.vue';
 import Value from './Value.vue';
 import ContextMenu from './ContextMenu.vue';
-import { ContextMenuAction } from '../shared.js';
+import { ContextMenuAction, getDefaultValue } from '../shared.js';
 
 const props = defineProps(['type', 'value']);
 const expanded = ref(false);
@@ -39,7 +39,6 @@ function showContextMenu(event, index) {
  * @param {string} action
  */
 function handleAction(action) {
-    console.log('action:', action, " and current index:", currentRow.value);
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
             data.value.splice(currentRow.value, 0, { key: '', value: '' });
@@ -62,7 +61,7 @@ onMounted(() => {
     }
     if (data.value.length == 0) {
         // Check value type and default data
-        data.value.push({ key: '', value: '' });
+        data.value.push({ key: '', value: getDefaultValue(type.value.type) });
     }
 });
 </script>

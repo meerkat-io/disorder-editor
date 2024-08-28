@@ -413,15 +413,15 @@ class Reader {
                 return array;
 
             case Tag.ObjectStart:
-                const map = {};
+                const object = new Array();
                 elementTag = this.readTag();
                 while (elementTag !== Tag.ObjectEnd) {
                     const key = this.readName();
                     const value = this.read(elementTag);
-                    map[key] = value;
+                    object.push({ key, value });
                     elementTag = this.readTag();
                 }
-                return map;
+                return object;
 
             default:
                 throw new Error(`unexpected tag ${tag}`);
@@ -553,22 +553,22 @@ class Writer {
                 break;
 
             case Type.MAP:
-                if (!(typeof value === 'object')) {
-                    throw new Error(`value ${value} is not a object`);
+                if (!(value instanceof Array)) {
+                    throw new Error(`value ${value} is not a array`);
                 }
-                for (const [key, element] of Object.entries(value)) {
-                    this.write(element, type.reference, key);
+                for (const pair of value) {
+                    this.write(pair.value, type.reference, pair.key);
                 }
                 this.writeTag(Tag.ObjectEnd);
                 break;
 
             case Type.STRUCT:
-                if (!(typeof value === 'object')) {
-                    throw new Error(`value ${value} is not a struct`);
+                if (!(value instanceof Array)) {
+                    throw new Error(`value ${value} is not a array`);
                 }
-                for (const [key, element] of Object.entries(value)) {
-                    if (type.fields.hasOwnProperty(key)) {
-                        this.write(element, type.fields[key], key);
+                for (const pair of value) {
+                    if (type.fields.hasOwnProperty(pair.key)) {
+                        this.write(pair.value, type.fields[pair.key], pair.key);
                     }
                 }
                 this.writeTag(Tag.ObjectEnd);

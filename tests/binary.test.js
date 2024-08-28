@@ -151,9 +151,7 @@ test('read and write array & map', () => {
     const arrayType = new Type(Type.ARRAY);
     arrayType.reference = new Type(Type.STRING);
 
-    const map = {};
-    map['foo'] = 'hello';
-    map['bar'] = 'world';
+    const map = [{ key: 'foo', value: 'hello' }, { key: 'bar', value: 'world' }];
     const mapType = new Type(Type.MAP);
     mapType.reference = new Type(Type.STRING);
 
@@ -166,7 +164,7 @@ test('read and write array & map', () => {
     assert.deepEqual(reader.read(), map);
 
     const zeroArray = [];
-    const zeroMap = {};
+    const zeroMap = [];
     writer.write(zeroArray, arrayType);
     writer.write(zeroMap, mapType);
     assert.deepEqual(reader.read(), zeroArray);
@@ -180,34 +178,21 @@ test('read and write struct', () => {
     const structType = schema.getMessage('test.object');
 
     const time = new Date().getTime();
-    const number = {};
-    number['value'] = 789;
-    const object = {};
-    object['bool_field'] = true;
-    object['int_field'] = 123;
-    object['string_field'] = 'foo';
-    object['bytes_field'] = new Uint8Array([4, 5, 6]);
-    object['enum_field'] = 'blue';
-    object['time_field'] = new Date(time);
-    object['obj_field'] = number;
-    object['int_array'] = [1, 2, 3];
-    object['int_map'] = {};
-    object['int_map']['foo'] = 1;
-    object['int_map']['bar'] = 2;
-    object['obj_array'] = [number, number];
-    object['obj_map'] = {};
-    object['obj_map']['foo'] = number;
-    object['obj_map']['bar'] = number;
-    object['nested'] = {}
-    object['nested']['level0'] = {}
-    object['nested']['level0']['level1'] = []
-    object['nested']['level0']['level1'][0] = []
-    object['nested']['level0']['level1'][0][0] = {}
-    object['nested']['level0']['level1'][0][0]['level2'] = 'red'
-    object['sub'] = {}
-    object['sub']['sub'] = {}
-    object['sub']['sub']['sub'] = {}
-    object['sub']['sub']['sub']['value'] = 456
+    const number = [{ key: 'value', value: 789 }];
+    const object = [];
+    object.push({ key: 'bool_field', value: true });
+    object.push({ key: 'int_field', value: 123 });
+    object.push({ key: 'string_field', value: 'foo' });
+    object.push({ key: 'bytes_field', value: new Uint8Array([4, 5, 6]) });
+    object.push({ key: 'enum_field', value: 'blue' });
+    object.push({ key: 'time_field', value: new Date(time) });
+    object.push({ key: 'obj_field', value: number });
+    object.push({ key: 'int_array', value: [1, 2, 3] });
+    object.push({ key: 'int_map', value: [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }] });
+    object.push({ key: 'obj_array', value: [number, number] });
+    object.push({ key: 'obj_map', value: [{ key: 'foo', value: number }, { key: 'bar', value: number }] });
+    object.push({ key: 'nested', value: [{ key: 'level0', value: [{ key: 'level1', value: [[[{ key: 'level2', value: 'red' }]]] }] }] });
+    object.push({ key: 'sub', value: [{ key: 'sub', value: [{ key: 'sub', value: [{ key: 'value', value: 456 }] }] }] });
 
     const writer = new Writer();
     writer.write(object, structType);

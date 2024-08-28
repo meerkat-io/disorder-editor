@@ -201,7 +201,7 @@ class Schema {
                 }
 
                 /**
-                 * @type {Map<string, string>}
+                 * @type {Object}
                  */
                 const fields = file.messages[messageName];
                 if (!(typeof fields === 'object')) {

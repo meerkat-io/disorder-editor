@@ -66,7 +66,7 @@ onMounted(() => {
     }
     if (value.value.length == 0) {
         // Check value type and default data
-        value.value.push({ key: '', value: getDefaultValue(props.type.type) });
+        value.value.push({ key: '', value: getDefaultValue(props.type.reference.type) });
     }
 });
 </script>

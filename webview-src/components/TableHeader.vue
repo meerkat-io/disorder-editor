@@ -12,71 +12,71 @@ const header = ref(null)
  * @param {MouseEvent} event 
  */
 function resize(name, event) {
-  const startX = event.pageX
-  const width = parseInt(window.getComputedStyle(collumns.value[name]).width, 10)
+    const startX = event.pageX
+    const width = parseInt(window.getComputedStyle(collumns.value[name]).width, 10)
 
-  /**
-   * @param {MouseEvent} e 
-   */
-  function setSize(e) {
-    const movedX = e.pageX - startX
-    collumnsWidth.value[name] = width + movedX + 'px'
-  }
+    /**
+     * @param {MouseEvent} e 
+     */
+    function setSize(e) {
+        const movedX = e.pageX - startX
+        collumnsWidth.value[name] = width + movedX + 'px'
+    }
 
-  document.addEventListener('mousemove', setSize)
+    document.addEventListener('mousemove', setSize)
 
-  function cleanup() {
-    document.removeEventListener('mousemove', setSize)
-    document.removeEventListener('mouseup', cleanup)
-  }
+    function cleanup() {
+        document.removeEventListener('mousemove', setSize)
+        document.removeEventListener('mouseup', cleanup)
+    }
 
-  document.addEventListener('mouseup', cleanup)
+    document.addEventListener('mouseup', cleanup)
 }
 
 /**
  * @param {string} name
  */
 function reset(name) {
-  collumnsWidth.value[name] = null
+    collumnsWidth.value[name] = null
 }
 
 onMounted(() => {
-  let observer = new ResizeObserver(
-    entries => {
-      headerHeight.value = entries[0].contentRect.height + 'px';
-    }
-  );
-  observer.observe(header.value);
+    let observer = new ResizeObserver(
+        entries => {
+            headerHeight.value = entries[0].contentRect.height + 'px';
+        }
+    );
+    observer.observe(header.value);
 }
 );
 </script>
 
 <template>
-  <thead ref="header">
-    <tr>
-      <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)"
-        :style="{ minWidth: '100px', width: collumnsWidth[name] }">
-        {{ name }}
-        <div v-if="resizable === true" class="resizer" :style="{ height: headerHeight }"
-          @mousedown="resize(name, $event)" @dblclick="reset(name)"></div>
-      </th>
-    </tr>
-  </thead>
+    <thead ref="header">
+        <tr>
+            <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)"
+                :style="{ minWidth: '100px', width: collumnsWidth[name] }">
+                {{ name }}
+                <div v-if="resizable === true" class="resizer" :style="{ height: headerHeight }"
+                    @mousedown="resize(name, $event)" @dblclick="reset(name)"></div>
+            </th>
+        </tr>
+    </thead>
 </template>
 
 <style scoped>
 .resizer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin-right: -3px;
-  width: 6px;
-  cursor: col-resize;
-  user-select: none;
-  z-index: 999;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-right: -3px;
+    width: 6px;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 999;
 }
 
 th {
-  position: relative;
+    position: relative;
 }
 </style>

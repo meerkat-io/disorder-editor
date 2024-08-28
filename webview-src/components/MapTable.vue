@@ -8,14 +8,15 @@ import Value from './Value.vue';
 import ContextMenu from './ContextMenu.vue';
 import { ContextMenuAction } from '../shared.js';
 
-const props = defineProps(['node']);
+const props = defineProps(['type', 'value']);
 const expanded = ref(false);
 const headers = ref([
     { name: 'Key', resizable: true },
     { name: 'Value', resizable: true },
 ]);
 const data = ref([]);
-const node = toRef(props, 'node');
+const type = toRef(props, 'type');
+const value = toRef(props, 'value');
 const contextMenuVisable = ref(false)
 const contextMenuLocation = ref({ x: 0, y: 0 });
 const currentRow = ref(-1);
@@ -53,14 +54,14 @@ function handleAction(action) {
 }
 
 onMounted(() => {
-    console.log('node in map-table:', node.value);
-    if (node.value.value == null) {
-        node.value.value = {};
+    if (value.value == null) {
+        value.value = {};
     }
-    for (let [key, value] of Object.entries(node.value.value)) {
-        data.value.push({ key, value });
+    for (let [k, v] of Object.entries(value.value)) {
+        data.value.push({ key: k, value: v });
     }
     if (data.value.length == 0) {
+        // Check value type and default data
         data.value.push({ key: '', value: '' });
     }
 });
@@ -76,13 +77,14 @@ onMounted(() => {
         <tbody>
             <tr v-for="(item, index) in data" :key="item.key" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
-                    <value :node="{ type: new Type(Type.STRING), value: item.key }" />
+                    <value :type="new Type(Type.STRING)" :value="item.key" />
                 </td>
                 <td>
-                    <cell :node="{ type: node.type.reference, value: item.value }" />
+                    <cell :type="type.reference" :value="item.value" />
                 </td>
             </tr>
         </tbody>
     </table>
-    <context-menu :visible="contextMenuVisable" :location="contextMenuLocation" @action="(action) => handleAction(action)"/>
+    <context-menu :visible="contextMenuVisable" :location="contextMenuLocation"
+        @action="(action) => handleAction(action)" />
 </template>

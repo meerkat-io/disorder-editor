@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, toRef } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Type } from '../shared'
 
 import TableHeader from './TableHeader.vue';
@@ -8,15 +8,17 @@ import Value from './Value.vue';
 import ContextMenu from './ContextMenu.vue';
 import { ContextMenuAction, getDefaultValue } from '../shared.js';
 
-const props = defineProps(['type', 'value']);
+const props = defineProps(['type']);
+const value = defineModel();
+
 const expanded = ref(false);
 const headers = ref([
     { name: 'Key', resizable: true },
     { name: 'Value', resizable: true },
 ]);
+
 const data = ref([]);
-const type = toRef(props, 'type');
-const value = toRef(props, 'value');
+
 const contextMenuVisable = ref(false)
 const contextMenuLocation = ref({ x: 0, y: 0 });
 const currentRow = ref(-1);
@@ -43,9 +45,11 @@ function handleAction(action) {
         case ContextMenuAction.INSERT_ABOVE:
             data.value.splice(currentRow.value, 0, { key: '', value: '' });
             break;
+
         case ContextMenuAction.DELETE:
             data.value.splice(currentRow.value, 1);
             break;
+
         case ContextMenuAction.INSERT_BELOW:
             data.value.splice(currentRow.value + 1, 0, { key: '', value: '' });
             break;
@@ -61,8 +65,9 @@ onMounted(() => {
     }
     if (data.value.length == 0) {
         // Check value type and default data
-        data.value.push({ key: '', value: getDefaultValue(type.value.type) });
+        data.value.push({ key: '', value: getDefaultValue(props.type.type) });
     }
+    console.log(data.value);
 });
 </script>
 
@@ -74,12 +79,12 @@ onMounted(() => {
     <table v-if="expanded">
         <table-header :headers="headers" />
         <tbody>
-            <tr v-for="(item, index) in data" :key="item.key" @contextmenu.prevent="showContextMenu($event, index)">
+            <tr v-for="(item, index) in data" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
-                    <value :type="new Type(Type.STRING)" :value="item.key" />
+                    <value :type="new Type(Type.STRING)" v-model="item.key" />
                 </td>
                 <td>
-                    <cell :type="type.reference" :value="item.value" />
+                    <cell :type="props.type.reference" v-model="item.value" />
                 </td>
             </tr>
         </tbody>

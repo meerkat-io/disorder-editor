@@ -1,6 +1,6 @@
 <script setup>
 
-import { ref, toRef, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { ContextMenuAction } from '../shared.js';
 
 const props = defineProps(['location']);

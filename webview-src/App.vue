@@ -52,5 +52,5 @@ vscode.postMessage({ command: 'ready' });
         @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema" />
     <message v-if="view == View.MESSAGE" @select="(message) => vscode.postMessage({ command: 'message', body: message })"
         :messages="messages" />
-    <cell v-else-if="view == View.DATA" :type="root.type" :value="root.value"/>
+    <cell v-else-if="view == View.DATA" :type="root.type" v-model="root.value"/>
 </template>

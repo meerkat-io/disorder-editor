@@ -94,10 +94,10 @@ class File {
     write(value) {
         this.value = value;
 
-        const header = {};
-        header[HeaderName.SCHEMA] = this.schemaPath;
-        header[HeaderName.MESSAGE] = this.message;
-        header[HeaderName.CONTAINER] = this.container;
+        const header = [];
+        header.push({ key: HeaderName.SCHEMA, value: this.schemaPath });
+        header.push({ key: HeaderName.MESSAGE, value: this.message });
+        header.push({ key: HeaderName.CONTAINER, value: this.container });
 
         const writer = new Writer();
         writer.write(header, File.HEADER_TYPE);
@@ -116,14 +116,28 @@ class File {
         const reader = new Reader(new ByteArray(bytes));
 
         const header = reader.read();
-        this.schemaPath = header[HeaderName.SCHEMA];
+        this.schemaPath = this.readHeader(header, HeaderName.SCHEMA);
 
         const schemaPath = path.join(path.dirname(this.filePath), this.schemaPath);
         this.schema.load(schemaPath);
 
-        this.setMessage(header[HeaderName.MESSAGE], header[HeaderName.CONTAINER]);
-        this.value=reader.read();
+        this.setMessage(this.readHeader(header, HeaderName.MESSAGE), this.readHeader(header, HeaderName.CONTAINER));
+        this.value = reader.read();
         return this.value;
+    }
+
+    /**
+     * @param {Array} header
+     * @param {string} name
+     * @returns {string}
+     */
+    readHeader(header, name) {
+        for (let pair of header) {
+            if (pair.key === name) {
+                return pair.value;
+            }
+        }
+        return '';
     }
 }
 

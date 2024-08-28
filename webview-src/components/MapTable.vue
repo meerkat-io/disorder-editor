@@ -17,8 +17,6 @@ const headers = ref([
     { name: 'Value', resizable: true },
 ]);
 
-const data = ref([]);
-
 const contextMenuVisable = ref(false)
 const contextMenuLocation = ref({ x: 0, y: 0 });
 const currentRow = ref(-1);
@@ -46,18 +44,18 @@ function handleAction(action) {
             if (currentRow.value == -1) {
                 currentRow.value = 0;
             }
-            data.value.splice(currentRow.value, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
+            value.value.splice(currentRow.value, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
             break;
 
         case ContextMenuAction.DELETE:
             if (currentRow.value == -1) {
                 return;
             }
-            data.value.splice(currentRow.value, 1);
+            value.value.splice(currentRow.value, 1);
             break;
 
         case ContextMenuAction.INSERT_BELOW:
-            data.value.splice(currentRow.value + 1, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
+            value.value.splice(currentRow.value + 1, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
             break;
     }
 }
@@ -66,28 +64,22 @@ onMounted(() => {
     if (value.value == null) {
         value.value = {};
     }
-    for (let [k, v] of Object.entries(value.value)) {
-        data.value.push({ key: k, value: v });
-    }
-    if (data.value.length == 0) {
+    if (value.value.length == 0) {
         // Check value type and default data
-        data.value.push({ key: '', value: getDefaultValue(props.type.type) });
+        value.value.push({ key: '', value: getDefaultValue(props.type.type) });
     }
-    console.log(data.value);
-    console.log(props.type);
-    console.log(props.type.type);
 });
 </script>
 
 <template>
     <span class="collapsed">
-        <span class="badge">Map[{{ data.length }}]</span>
+        <span class="badge">Map[{{ value.length }}]</span>
         <span class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
     </span>
     <table v-if="expanded">
         <table-header :headers="headers" @contextmenu.prevent="showContextMenu($event, -1)" />
         <tbody>
-            <tr v-for="(item, index) in data" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
+            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
                     <value :type="new Type(Type.STRING)" v-model="item.key" />
                 </td>

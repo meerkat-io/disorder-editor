@@ -8,10 +8,10 @@ const { Document } = require('./document')
 const { Type } = require('../disorder/schema')
 
 const SchemaStatus = {
-    NONE: 'none',
-    LOAD: 'load',
-    VALID: 'valid',
-    INVALID: 'invalid',
+	NONE: 'none',
+	LOAD: 'load',
+	VALID: 'valid',
+	INVALID: 'invalid',
 };
 
 /**
@@ -269,7 +269,7 @@ class EditorProvider {
 					} else {
 						this.postMessage(webviewPanel, 'show_datagrid', {
 							type: new Type('map[string]'),
-							value: { 'key1': 'value1', 'key2': 'value2' }
+							value: [{ key: 'key1', value: 'value1' }, { key: 'key2', value: 'value2' }]
 						});
 						/*
 						this.postMessage(webviewPanel, 'show_datagrid', {

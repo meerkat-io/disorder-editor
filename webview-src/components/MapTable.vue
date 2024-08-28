@@ -43,15 +43,21 @@ function showContextMenu(event, index) {
 function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
-            data.value.splice(currentRow.value, 0, { key: '', value: '' });
+            if (currentRow.value == -1) {
+                currentRow.value = 0;
+            }
+            data.value.splice(currentRow.value, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
             break;
 
         case ContextMenuAction.DELETE:
+            if (currentRow.value == -1) {
+                return;
+            }
             data.value.splice(currentRow.value, 1);
             break;
 
         case ContextMenuAction.INSERT_BELOW:
-            data.value.splice(currentRow.value + 1, 0, { key: '', value: '' });
+            data.value.splice(currentRow.value + 1, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
             break;
     }
 }
@@ -68,6 +74,8 @@ onMounted(() => {
         data.value.push({ key: '', value: getDefaultValue(props.type.type) });
     }
     console.log(data.value);
+    console.log(props.type);
+    console.log(props.type.type);
 });
 </script>
 
@@ -77,7 +85,7 @@ onMounted(() => {
         <span class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
     </span>
     <table v-if="expanded">
-        <table-header :headers="headers" />
+        <table-header :headers="headers" @contextmenu.prevent="showContextMenu($event, -1)" />
         <tbody>
             <tr v-for="(item, index) in data" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>

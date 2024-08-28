@@ -10,7 +10,7 @@ const vscode = acquireVsCodeApi();
 
 const schema = ref('');
 const messages = ref([]);
-const root = ref();
+const datagrid = ref();
 const view = ref(0);
 
 const View = {
@@ -38,8 +38,7 @@ function receiveMessage(message) {
 
         case 'show_datagrid':
             view.value = View.DATA;
-            root.value = message.body;
-            console.log("root:", root.value)
+            datagrid.value = message.body;
             break
     }
 }
@@ -52,5 +51,5 @@ vscode.postMessage({ command: 'ready' });
         @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema" />
     <message v-if="view == View.MESSAGE" @select="(message) => vscode.postMessage({ command: 'message', body: message })"
         :messages="messages" />
-    <cell v-else-if="view == View.DATA" :type="root.type" v-model="root.value"/>
+    <cell v-else-if="view == View.DATA" :type="datagrid.type" v-model="datagrid.value"/>
 </template>

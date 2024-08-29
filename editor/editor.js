@@ -268,7 +268,7 @@ class EditorProvider {
 						this.postMessage(webviewPanel, 'select_schema', SchemaStatus.LOAD);
 					} else {
 						this.postMessage(webviewPanel, 'show_datagrid', {
-							type: new Type('map[string]'),
+							type: new Type('map[int]'),
 							value: [{ key: 'key1', value: 'value1' }, { key: 'key2', value: 'value2' }]
 						});
 						/*

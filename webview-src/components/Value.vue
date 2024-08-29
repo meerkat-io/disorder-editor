@@ -3,7 +3,19 @@
 import { Type } from '../shared'
 
 const props = defineProps(['type']);
-const value = defineModel();
+const value = defineModel({
+    set(newValue) {
+        console.log('update ==============');
+        console.log(newValue);
+        console.log(props.type.type);
+        console.log(typeof newValue);
+        if (props.type.type == Type.BOOL) {
+            return newValue === 'true';
+        } else if (props.type.type == Type.INT || props.type.type == Type.LONG) {
+            return Math.floor(newValue);
+        }
+    }
+});
 
 </script>
 

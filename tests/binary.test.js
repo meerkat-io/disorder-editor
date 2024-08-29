@@ -182,6 +182,7 @@ test('read and write struct', () => {
     const object = [];
     object.push({ key: 'bool_field', value: true });
     object.push({ key: 'int_field', value: 123 });
+    object.push({ key: 'long_field', value: 9007199254740991n });
     object.push({ key: 'string_field', value: 'foo' });
     object.push({ key: 'bytes_field', value: new Uint8Array([4, 5, 6]) });
     object.push({ key: 'enum_field', value: 'blue' });

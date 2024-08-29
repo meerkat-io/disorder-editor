@@ -11,6 +11,7 @@ messages:
   object:
     bool_field: bool
     int_field: int
+    long_field: long
     string_field: string
     bytes_field: bytes
     enum_field: color

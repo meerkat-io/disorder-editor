@@ -3,7 +3,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { ContextMenuAction } from '../shared.js';
 
-const props = defineProps(['location']);
+const props = defineProps(['location', 'isHeader']);
 const emit = defineEmits(['action']);
 const visible = defineModel();
 
@@ -36,8 +36,8 @@ onBeforeUnmount(() => {
     <div class="context-menu" ref="contextMenu" v-show="visible" tabindex="-1" 
     :style="{ top: location.y + 'px', left: location.x + 'px' }">
         <ul>
-            <li @click="action(ContextMenuAction.INSERT_ABOVE)">Insert row above</li>
-            <li @click="action(ContextMenuAction.DELETE)">Delete row</li>
+            <li @click="action(ContextMenuAction.INSERT_ABOVE)" v-if="!location.header">Insert row above</li>
+            <li @click="action(ContextMenuAction.DELETE)" v-if="!location.header">Delete row</li>
             <li @click="action(ContextMenuAction.INSERT_BELOW)">Insert row below</li>
         </ul>
     </div>

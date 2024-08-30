@@ -18,7 +18,7 @@ const headers = ref([
 ]);
 
 const contextMenuVisable = ref(false)
-const contextMenuLocation = ref({ x: 0, y: 0 });
+const contextMenuLocation = ref({ x: 0, y: 0, header: false });
 const currentRow = ref(-1);
 
 function toggle() {
@@ -30,7 +30,7 @@ function toggle() {
  * @param {number} index
  */
 function showContextMenu(event, index) {
-    contextMenuLocation.value = { x: event.clientX, y: event.clientY };
+    contextMenuLocation.value = { x: event.clientX, y: event.clientY, header: index == -1 };
     contextMenuVisable.value = true;
     currentRow.value = index;
 }
@@ -41,16 +41,10 @@ function showContextMenu(event, index) {
 function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
-            if (currentRow.value == -1) {
-                currentRow.value = 0;
-            }
             value.value.splice(currentRow.value, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
             break;
 
         case ContextMenuAction.DELETE:
-            if (currentRow.value == -1) {
-                return;
-            }
             value.value.splice(currentRow.value, 1);
             break;
 
@@ -62,11 +56,7 @@ function handleAction(action) {
 
 onMounted(() => {
     if (value.value == null) {
-        value.value = {};
-    }
-    if (value.value.length == 0) {
-        // Check value type and default data
-        value.value.push({ key: '', value: getDefaultValue(props.type.reference.type) });
+        value.value = [];
     }
 });
 </script>

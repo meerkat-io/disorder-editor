@@ -1,22 +1,25 @@
 <script setup>
-
 import { Type } from '../shared'
 
 const props = defineProps(['type']);
+const emit = defineEmits(['edit']);
 const value = defineModel({
     set(newValue) {
-        console.log('update ==============');
-        console.log(newValue);
-        console.log(props.type.type);
-        console.log(typeof newValue);
-        if (props.type.type == Type.BOOL) {
-            return newValue === 'true';
-        } else if (props.type.type == Type.INT || props.type.type == Type.LONG) {
-            return Math.floor(newValue);
+        console.log('update value ==============');
+        console.log('value:', newValue);
+        console.log('type in define:', props.type.type);
+        console.log('type of instance', typeof newValue);
+        if (props.type.type == Type.INT || props.type.type == Type.LONG) {
+            newValue = Math.floor(newValue);
         }
+        emit('edit', {
+            'ops': 'update',
+            'path': 'path',
+            'value': newValue
+        });
+        return newValue;
     }
 });
-
 </script>
 
 <template>

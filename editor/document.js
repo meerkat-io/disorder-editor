@@ -1,7 +1,5 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-const fs = require('fs')
 const vscode = require('vscode')
-const { Edit } = require('./edit');
 const { File } = require('../disorder/file');
 
 /**
@@ -10,10 +8,8 @@ const { File } = require('../disorder/file');
  * @property {File} file
  * @property {boolean} disposed
  * @property {vscode.Disposable[]} disposables
- * @property {Edit[]} edits
- * @property {Edit[]} savedEdits
  * @property {vscode.EventEmitter<void>} onDidDispose
- * @property {vscode.EventEmitter<{content?: Uint8Array, edits: Edit[]}>} onDidChangeDocument
+ * @property {vscode.EventEmitter<{content?: Uint8Array, action: string}>} onDidChangeDocument
  * @property {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>} onDidChange
  */
 class Document {
@@ -38,14 +34,6 @@ class Document {
 		 * @type {vscode.Disposable[]}
 		 */
 		this.disposables = [];
-		/**
-		 * @type {Edit[]}
-		 */
-		this.edits = [];
-		/**
-		 * @type {Edit[]}
-		 */
-		this.savedEdits = [];
 
 		/**
 		 * @type {vscode.EventEmitter<void>}
@@ -54,7 +42,7 @@ class Document {
 		this.register(this.onDidDispose);
 
 		/**
-		 * @type {vscode.EventEmitter<{content?: Uint8Array, edits: Edit[]}>}
+		 * @type {vscode.EventEmitter<{content?: Uint8Array, action: string}>}
 		 */
 		this.onDidChangeDocument = new vscode.EventEmitter();
 		this.register(this.onDidChangeDocument);
@@ -102,26 +90,40 @@ class Document {
 		}
 	}
 
-	/**
-	 * @param {Edit} edit
-	 */
-	edit(edit) {
+	edit() {
+		this.onDidChange.fire({
+			undo: async () => {
+				console.log("undo");
+				this.onDidChangeDocument.fire({
+					action: "undo",
+				});
+			},
+			redo: async () => {
+				console.log("redo");
+				this.onDidChangeDocument.fire({
+					action: "redo",
+				});
+			}
+		});
 		//TODO: merge edits
-		this.edits.push(edit);
+		//this.edits.push(edit);
+		/*
 		this.onDidChange.fire({
 			undo: async () => {
 				this.edits.pop();
+				console.log("undo", this.edits)
 				this.onDidChangeDocument.fire({
 					edits: this.edits,
 				});
 			},
 			redo: async () => {
 				this.edits.push(edit);
+				console.log("redo", this.edits)
 				this.onDidChangeDocument.fire({
 					edits: this.edits,
 				});
 			}
-		});
+		});*/
 	}
 
 	/**
@@ -163,10 +165,11 @@ class Document {
 	revert(_cancellation) {
 		this.load();
 		this.edits = this.savedEdits;
+		/* TODO
 		this.onDidChangeDocument.fire({
 			content: fs.readFileSync(this.uri.fsPath),
 			edits: this.edits,
-		});
+		});*/
 	}
 
 	/**

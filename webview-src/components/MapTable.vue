@@ -10,6 +10,7 @@ import { ContextMenuAction, getDefaultValue } from '../shared.js';
 
 const props = defineProps(['type']);
 const value = defineModel();
+const emit = defineEmits(['edit']);
 
 const expanded = ref(false);
 const headers = ref([
@@ -54,6 +55,13 @@ function handleAction(action) {
     }
 }
 
+/**
+ * @param {Object} edit
+ */
+function handleEdit(edit) {
+    emit('edit', edit);
+}
+
 onMounted(() => {
     if (value.value == null) {
         value.value = [];
@@ -71,10 +79,10 @@ onMounted(() => {
         <tbody>
             <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
-                    <value :type="new Type(Type.STRING)" v-model="item.key" />
+                    <value :type="new Type(Type.STRING)" v-model="item.key" @edit="handleEdit" />
                 </td>
                 <td>
-                    <cell :type="props.type.reference" v-model="item.value" />
+                    <cell :type="props.type.reference" v-model="item.value" @edit="handleEdit" />
                 </td>
             </tr>
         </tbody>

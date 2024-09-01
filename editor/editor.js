@@ -74,17 +74,17 @@ class EditorProvider {
 			console.log("onDidChange in editor", e)
 			this.onDidChange.fire({
 				document: document,
-				undo: e.redo,
-				redo: e.undo,
+				undo: e.undo,
+				redo: e.redo,
 			});
 		}));
 
 		listeners.push(document.onDidChangeDocument.event(e => {
 			// Update all webviews when the document changes
 			for (const webviewPanel of this.getWebviews(document.uri)) {
-				console.log("onDidChangeDocument in editor", e)
+				console.log("onDidChangeDocument in editor, post message to vue", e)
 				this.postMessage(webviewPanel, 'update', {
-					edits: e.edits,
+					action: e.action,
 					content: e.content,
 				});
 			}
@@ -313,7 +313,7 @@ class EditorProvider {
 
 			case 'edit':
 				//TODO
-				document.edit(message.body);
+				document.edit();
 				return;
 		}
 	}

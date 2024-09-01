@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
@@ -42,6 +42,19 @@ function receiveMessage(message) {
             break
     }
 }
+
+watch(
+    () => datagrid.value,
+    (value) => {
+        console.log('watching ==============');
+        console.log('prevValue');
+        console.log('newValue');
+        console.log(value);
+
+        vscode.postMessage({ command: 'edit', body: {} });
+    },
+    { deep: true }
+)
 
 vscode.postMessage({ command: 'ready' });
 </script>

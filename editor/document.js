@@ -106,6 +106,7 @@ class Document {
 	 * @param {Edit} edit
 	 */
 	edit(edit) {
+		//TODO: merge edits
 		this.edits.push(edit);
 		this.onDidChange.fire({
 			undo: async () => {
@@ -145,6 +146,8 @@ class Document {
 	 * @returns {void}
 	 */
 	saveAs(targetResource, cancellation) {
+		//TODO: debug
+		return;
 		this.uri = targetResource;
 		if (cancellation.isCancellationRequested) {
 			return;

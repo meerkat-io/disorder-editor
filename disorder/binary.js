@@ -564,6 +564,7 @@ class Writer {
                 break;
 
             case Type.STRUCT:
+                //TODO skip null fields
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }

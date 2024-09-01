@@ -37,6 +37,10 @@ class EditorProvider {
 		 * @type {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>}
 		 */
 		this.onDidChange = new vscode.EventEmitter();
+		/**
+		 * @type {vscode.Event<vscode.CustomDocumentEditEvent<Document>>}
+		 */
+		this.onDidChangeCustomDocument = this.onDidChange.event;
 	}
 
 	/**
@@ -67,6 +71,7 @@ class EditorProvider {
 
 		const listeners = [];
 		listeners.push(document.onDidChange.event(e => {
+			console.log("onDidChange in editor", e)
 			this.onDidChange.fire({
 				document: document,
 				undo: e.redo,
@@ -77,6 +82,7 @@ class EditorProvider {
 		listeners.push(document.onDidChangeDocument.event(e => {
 			// Update all webviews when the document changes
 			for (const webviewPanel of this.getWebviews(document.uri)) {
+				console.log("onDidChangeDocument in editor", e)
 				this.postMessage(webviewPanel, 'update', {
 					edits: e.edits,
 					content: e.content,
@@ -110,6 +116,7 @@ class EditorProvider {
 	 */
 	saveCustomDocument(document, cancellation) {
 		//TODO: fetch data from webview then save
+		console.log("saveCustomDocument");
 		return document.save(cancellation);
 	}
 

@@ -51,6 +51,8 @@ function receiveMessage(message) {
             break;
 
         case InMessageType.SHOW_DATAGRID:
+            console.log('show datagrid');
+            console.log(message.body);
             view.value = View.DATA;
             datagrid.value = message.body;
             break;

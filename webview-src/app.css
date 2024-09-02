@@ -31,6 +31,8 @@ input:focus {
     outline: none;
 }
 
+/* TODO: add style for select */
+
 .collapsed {
     white-space: nowrap;
 }

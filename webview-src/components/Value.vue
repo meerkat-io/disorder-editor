@@ -37,5 +37,7 @@ function sendEdit(oldValue, newValue) {
     <input v-else-if="props.type.type == Type.BYTES" type="file" /><!-- TODO, add label of length -->
     <input v-else-if="props.type.type == Type.STRING" type="text" v-model="value" />
     <input v-else-if="props.type.type == Type.TIMESTAMP" type="datetime-local" step="0.001" v-model="value" />
-    <!-- add enum support-->
+    <select v-else-if="props.type.type == Type.ENUM" v-model="value" >
+        <option v-for="item in props.type.enums">{{ item }}</option>
+    </select>
 </template>

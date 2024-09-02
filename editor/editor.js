@@ -284,9 +284,12 @@ class EditorProvider {
 					if (document.file.initialized === false) {
 						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
 					} else {
+						const t = new Type('map[enum]');
+						t.reference = new Type('enum');
+						t.reference.enums = ['red', 'green', 'blue'];
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
-							type: new Type('map[timestamp]'),
-							value: [{ key: 'key1', value: null }, { key: 'key2', value: null }],
+							type: t,
+							value: [{ key: 'key1', value: '' }, { key: 'key2', value: '' }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

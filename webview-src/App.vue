@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
+import { OutMessageType, Edit } from './shared'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -49,15 +50,15 @@ function receiveMessage(message) {
 }
 
 /**
- * @param {Object} edit
+ * @param {Edit} edit
  */
 function handleEdit(edit) {
-    console.log('handle edit ==============');
+    console.log('send edit in App ==============');
     console.log(edit);
-    vscode.postMessage({ command: 'edit', body: edit });
+    vscode.postMessage({ command: OutMessageType.EDIT, body: edit });
 }
 
-vscode.postMessage({ command: 'ready' });
+vscode.postMessage({ command: OutMessageType.READY });
 
 
 /**
@@ -96,8 +97,8 @@ vscode.postMessage({ command: 'ready' });
 
 <template>
     <schema v-if="view == View.SCHEMA"
-        @select="(schemaPath) => vscode.postMessage({ command: 'schema', body: schemaPath })" :status="schema" />
+        @select="(schemaPath) => vscode.postMessage({ command: OutMessageType.SCHEMA, body: schemaPath })" :status="schema" />
     <message v-if="view == View.MESSAGE"
-        @select="(message) => vscode.postMessage({ command: 'message', body: message })" :messages="messages" />
-    <cell v-else-if="view == View.DATA" :type="datagrid.type" v-model="datagrid.value" @edit="handleEdit" />
+        @select="(message) => vscode.postMessage({ command: OutMessageType.MESSAGE, body: message })" :messages="messages" />
+    <cell v-else-if="view == View.DATA" :type="datagrid.type" v-model="datagrid.value" :path="''" @edit="handleEdit" />
 </template>

@@ -5,7 +5,7 @@ import { Type } from '../shared'
 import MapTable from './MapTable.vue'
 import Value from './Value.vue';
 
-const props = defineProps(['type', 'value']);
+const props = defineProps(['type', 'value', 'path']);
 const value = defineModel();
 const emit = defineEmits(['edit']);
 
@@ -18,6 +18,6 @@ function handleEdit(edit) {
 </script>
 
 <template>
-    <map-table v-if="props.type.type == Type.MAP" :type="props.type" v-model="value" @edit="handleEdit" />
-    <value v-else :type="props.type" v-model="value" @edit="handleEdit" />
+    <map-table v-if="props.type.type == Type.MAP" :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
+    <value v-else :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
 </template>

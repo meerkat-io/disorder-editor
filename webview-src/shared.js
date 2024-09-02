@@ -35,6 +35,45 @@ class Type {
 }
 
 /**
+ * @property {Operation} undo
+ * @property {Operation} redo
+ */
+class Edit {
+    /**
+     * @param {Operation} undo 
+     * @param {Operation} redo 
+     */
+    constructor(undo, redo) {
+        this.undo = undo;
+        this.redo = redo;
+    }
+}
+
+/**
+ * @property {string} type
+ * @property {string} path
+ * @property {any} value
+ */
+class Operation {
+    /**
+     * @param {string} type 
+     * @param {string} path 
+     * @param {any} value 
+     */
+    constructor(type, path, value) {
+        this.type = type;
+        this.path = path;
+        this.value = value;
+    }
+}
+
+const OperationType = {
+    INSERT: 'insert',
+    DELETE: 'delete',
+    UPDATE: 'update',
+};
+
+/**
  * @param {string} type 
  */
 function getDefaultValue(type) {
@@ -81,4 +120,11 @@ const ContextMenuAction = {
     DELETE: 'delete',
 }
 
-export { Type, Container, SchemaStatus, ContextMenuAction, getDefaultValue };
+const OutMessageType = {
+    SCHEMA: 'schema',
+    MESSAGE: 'message',
+    EDIT: 'edit',
+    READY: 'ready',
+};
+
+export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, OutMessageType, getDefaultValue };

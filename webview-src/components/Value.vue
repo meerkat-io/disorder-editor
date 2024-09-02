@@ -1,25 +1,33 @@
 <script setup>
-import { Type } from '../shared'
+import { Type, Edit, Operation, OperationType } from '../shared'
 
-const props = defineProps(['type']);
+const props = defineProps(['type', 'path']);
 const emit = defineEmits(['edit']);
 const value = defineModel({
     set(newValue) {
         console.log('update value ==============');
-        console.log('value:', newValue);
+        console.log('old value:', value.value);
+        console.log('new value:', newValue);
         console.log('type in define:', props.type.type);
         console.log('type of instance', typeof newValue);
         if (props.type.type == Type.INT || props.type.type == Type.LONG) {
             newValue = Math.floor(newValue);
         }
-        emit('edit', {
-            'ops': 'update',
-            'path': 'path',
-            'value': newValue
-        });
+
+        sendEdit(value.value, newValue);
         return newValue;
     }
 });
+
+/**
+ * @param {any} oldValue 
+ * @param {any} newValue 
+ */
+function sendEdit(oldValue, newValue) {
+    const undo = new Operation(OperationType.UPDATE, props.path, oldValue);
+    const redo = new Operation(OperationType.UPDATE, props.path, newValue);
+    emit('edit', new Edit(undo, redo));
+}   
 </script>
 
 <template>

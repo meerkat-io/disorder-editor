@@ -8,7 +8,7 @@ import Value from './Value.vue';
 import ContextMenu from './ContextMenu.vue';
 import { ContextMenuAction, getDefaultValue } from '../shared.js';
 
-const props = defineProps(['type']);
+const props = defineProps(['type', 'path']);
 const value = defineModel();
 const emit = defineEmits(['edit']);
 
@@ -79,10 +79,12 @@ onMounted(() => {
         <tbody>
             <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
-                    <value :type="new Type(Type.STRING)" v-model="item.key" @edit="handleEdit" />
+                    <value :type="new Type(Type.STRING)" v-model="item.key" :path="props.path + index + '.key'"
+                        @edit="handleEdit" />
                 </td>
                 <td>
-                    <cell :type="props.type.reference" v-model="item.value" @edit="handleEdit" />
+                    <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
+                        @edit="handleEdit" />
                 </td>
             </tr>
         </tbody>

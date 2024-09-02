@@ -285,8 +285,8 @@ class EditorProvider {
 						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
 					} else {
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
-							type: new Type('map[int]'),
-							value: [{ key: 'key1', value: 0 }, { key: 'key2', value: 1 }]
+							type: new Type('map[timestamp]'),
+							value: [{ key: 'key1', value: null }, { key: 'key2', value: null }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

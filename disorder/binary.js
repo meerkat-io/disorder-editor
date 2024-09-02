@@ -526,6 +526,7 @@ class Writer {
                 break;
 
             case Type.TIMESTAMP:
+                //TODO check null
                 if (!(value instanceof Date)) {
                     throw new Error(`value ${value} is not a timestamp (Date)`);
                 }
@@ -565,6 +566,7 @@ class Writer {
 
             case Type.STRUCT:
                 //TODO skip null fields
+                //TODO skip empty array & map
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }

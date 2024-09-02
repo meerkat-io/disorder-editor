@@ -1,0 +1,1 @@
+//TODO set struct to null

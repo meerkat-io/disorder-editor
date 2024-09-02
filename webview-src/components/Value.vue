@@ -34,8 +34,8 @@ function sendEdit(oldValue, newValue) {
     <input v-if="props.type.type == Type.BOOL" type="checkbox" v-model="value" />
     <input v-else-if="props.type.type == Type.INT || props.type.type == Type.LONG" type="number" v-model="value" />
     <input v-else-if="props.type.type == Type.FLOAT || props.type.type == Type.DOUBLE" type="number" v-model="value" />
-    <input v-else-if="props.type.type == Type.BYTES" type="file" /><!-- add label of length -->
+    <input v-else-if="props.type.type == Type.BYTES" type="file" /><!-- TODO, add label of length -->
     <input v-else-if="props.type.type == Type.STRING" type="text" v-model="value" />
-    <input v-else-if="props.type.type == Type.TIMESTAMP" type="datetime-local" step="0.001" />
+    <input v-else-if="props.type.type == Type.TIMESTAMP" type="datetime-local" step="0.001" v-model="value" />
     <!-- add enum support-->
 </template>

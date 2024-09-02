@@ -14,6 +14,21 @@ const SchemaStatus = {
 	INVALID: 'invalid',
 };
 
+const InMessageType = {
+    SCHEMA: 'schema',
+    MESSAGE: 'message',
+    EDIT: 'edit',
+    READY: 'ready',
+};
+
+const OutMessageType = {
+    SELECT_SCHEMA: 'select_schema',
+    SELECT_MESSAGE: 'select_message',
+    SHOW_DATAGRID: 'show_datagrid',
+    UNDO: 'undo',
+    REDO: 'redo',
+};
+
 /**
  * @public
  * @property {vscode.ExtensionContext} context
@@ -71,7 +86,6 @@ class EditorProvider {
 
 		const listeners = [];
 		listeners.push(document.onDidChange.event(e => {
-			console.log("onDidChange in editor", e)
 			this.onDidChange.fire({
 				document: document,
 				undo: e.undo,
@@ -82,11 +96,7 @@ class EditorProvider {
 		listeners.push(document.onDidChangeDocument.event(e => {
 			// Update all webviews when the document changes
 			for (const webviewPanel of this.getWebviews(document.uri)) {
-				console.log("onDidChangeDocument in editor, post message to vue", e)
-				this.postMessage(webviewPanel, 'update', {
-					action: e.action,
-					content: e.content,
-				});
+				this.postMessage(webviewPanel, e.action, {});
 			}
 		}));
 
@@ -268,18 +278,18 @@ class EditorProvider {
 	onMessage(webviewPanel, document, message) {
 		console.log("receive data in editor:", message)
 		switch (message.command) {
-			case 'ready':
+			case InMessageType.READY:
 				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
 				try {
 					if (document.file.initialized === false) {
-						this.postMessage(webviewPanel, 'select_schema', SchemaStatus.LOAD);
+						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
 					} else {
-						this.postMessage(webviewPanel, 'show_datagrid', {
+						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: new Type('map[int]'),
 							value: [{ key: 'key1', value: 0 }, { key: 'key2', value: 1 }]
 						});
 						/*
-						this.postMessage(webviewPanel, 'show_datagrid', {
+						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: document.file.type,
 							value: document.file.value,
 						});*/
@@ -289,30 +299,29 @@ class EditorProvider {
 				}
 				return;
 
-			case 'schema':
+			case InMessageType.SCHEMA:
 				try {
 					const messages = document.file.loadSchema(message.body);
 					if (messages.length === 0) {
-						this.postMessage(webviewPanel, 'select_schema', SchemaStatus.INVALID);
+						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.INVALID);
 					} else {
-						this.postMessage(webviewPanel, 'select_message', messages);
+						this.postMessage(webviewPanel, OutMessageType.SELECT_MESSAGE, messages);
 					}
 				} catch (error) {
-					this.postMessage(webviewPanel, 'select_schema', SchemaStatus.INVALID);
+					this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.INVALID);
 				}
 				return;
 
-			case 'message':
+			case InMessageType.MESSAGE:
 				document.file.setMessage(message.body.message, message.body.container);
 				document.file.write({});
-				this.postMessage(webviewPanel, 'show_datagrid', {
+				this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 					type: document.file.type,
 					value: document.file.value,
 				});
 				return;
 
-			case 'edit':
-				//TODO
+			case InMessageType.EDIT:
 				document.edit();
 				return;
 		}

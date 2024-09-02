@@ -127,4 +127,12 @@ const OutMessageType = {
     READY: 'ready',
 };
 
-export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, OutMessageType, getDefaultValue };
+const InMessageType = {
+    SELECT_SCHEMA: 'select_schema',
+    SELECT_MESSAGE: 'select_message',
+    SHOW_DATAGRID: 'show_datagrid',
+    UNDO: 'undo',
+    REDO: 'redo',
+};
+
+export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, OutMessageType, InMessageType, getDefaultValue };

@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue'
 import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
-import { OutMessageType, Edit } from './shared'
+import { OutMessageType, InMessageType, Edit } from './shared'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -32,20 +32,26 @@ onMounted(() => {
 
 function receiveMessage(message) {
     switch (message.command) {
-        case 'select_schema':
+        case InMessageType.SELECT_SCHEMA:
             view.value = View.SCHEMA;
             schema.value = message.body;
             break;
 
-        case 'select_message':
+        case InMessageType.SELECT_MESSAGE:
             view.value = View.MESSAGE;
             messages.value = message.body;
             break;
 
-        case 'show_datagrid':
+        case InMessageType.SHOW_DATAGRID:
             view.value = View.DATA;
             datagrid.value = message.body;
-            break
+            break;
+
+        case InMessageType.UNDO:
+            break;
+
+        case InMessageType.REDO:
+            break;
     }
 }
 

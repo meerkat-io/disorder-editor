@@ -93,13 +93,11 @@ class Document {
 	edit() {
 		this.onDidChange.fire({
 			undo: async () => {
-				console.log("undo");
 				this.onDidChangeDocument.fire({
 					action: "undo",
 				});
 			},
 			redo: async () => {
-				console.log("redo");
 				this.onDidChangeDocument.fire({
 					action: "redo",
 				});

@@ -31,7 +31,15 @@ input:focus {
     outline: none;
 }
 
-/* TODO: add style for select */
+select {
+    color: var(--vscode-editor-foreground);
+    background-color: transparent;
+    border: 0px;
+    padding: 2px 4px;
+    margin: 0px;
+    width: 100%;
+    vertical-align: baseline;
+}
 
 .collapsed {
     white-space: nowrap;

@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue'
 import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
-import { OutMessageType, InMessageType, Edit, OperationType } from './shared'
+import { OutMessageType, InMessageType, Edit, Operation, OperationType } from './shared'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -61,14 +61,33 @@ function receiveMessage(message) {
             console.log('undo');
             const undo = edits.pop();
             redoEdits.push(undo);
-            setValue(undo.undo.path, undo.undo.value);
+            executeOperation(undo.undo);
             break;
 
         case InMessageType.REDO:
             console.log('redo');
             const redo = redoEdits.pop();
             edits.push(redo);
-            setValue(redo.redo.path, redo.redo.value);
+            executeOperation(redo.redo);
+            break;
+    }
+}
+
+/**
+ * @param {Operation} operation
+ */
+function executeOperation(operation) {
+    switch (operation.type) {
+        case OperationType.INSERT:
+            datagrid.value.value.splice(operation.index, 0, operation.value);
+            break;
+
+        case OperationType.DELETE:
+            datagrid.value.value.splice(operation.index, 1);
+            break;
+
+        case OperationType.UPDATE:
+            setValue(operation.path, operation.value);
             break;
     }
 }

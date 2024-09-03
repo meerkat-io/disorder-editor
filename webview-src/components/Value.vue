@@ -24,8 +24,8 @@ const value = defineModel({
  * @param {any} newValue 
  */
 function sendEdit(oldValue, newValue) {
-    const undo = new Operation(OperationType.UPDATE, props.path, oldValue);
-    const redo = new Operation(OperationType.UPDATE, props.path, newValue);
+    const undo = new Operation(OperationType.UPDATE, props.path, oldValue, -1);
+    const redo = new Operation(OperationType.UPDATE, props.path, newValue, -1);
     emit('edit', new Edit(undo, redo));
 }   
 </script>

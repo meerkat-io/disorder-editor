@@ -59,11 +59,13 @@ class Operation {
      * @param {string} type 
      * @param {string} path 
      * @param {any} value 
+     * @param {number} index
      */
-    constructor(type, path, value) {
+    constructor(type, path, value, index) {
         this.type = type;
         this.path = path;
         this.value = value;
+        this.index = index;
     }
 }
 
@@ -84,18 +86,17 @@ function getDefaultValue(type) {
         case Type.LONG:
         case Type.FLOAT:
         case Type.DOUBLE:
-        case Type.TIMESTAMP:
             return 0;
+        case Type.TIMESTAMP:
         case Type.BYTES:
             return null;
         case Type.STRING:
         case Type.ENUM:
             return '';
         case Type.ARRAY:
-            return [];
         case Type.MAP:
         case Type.STRUCT:
-            return {};
+            return [];
         default:
             throw new Error(`Unknown type: ${type}`);
     }

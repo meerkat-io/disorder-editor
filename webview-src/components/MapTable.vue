@@ -6,7 +6,7 @@ import TableHeader from './TableHeader.vue';
 import Cell from './Cell.vue';
 import Value from './Value.vue';
 import ContextMenu from './ContextMenu.vue';
-import { ContextMenuAction, getDefaultValue } from '../shared.js';
+import { Edit, Operation, OperationType, ContextMenuAction, getDefaultValue } from '../shared.js';
 
 const props = defineProps(['type', 'path']);
 const value = defineModel();
@@ -42,21 +42,42 @@ function showContextMenu(event, index) {
 function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
-            value.value.splice(currentRow.value, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
+            const aboveRowValue = { key: '', value: getDefaultValue(props.type.reference.type) };
+            value.value.splice(value.value, 0, aboveRowValue);
+            sendEdit(action, null, aboveRowValue, currentRow.value);
             break;
 
         case ContextMenuAction.DELETE:
+            const currentRowValue = value.value[currentRow.value];
             value.value.splice(currentRow.value, 1);
+            sendEdit(action, currentRowValue, null, currentRow.value);
             break;
 
         case ContextMenuAction.INSERT_BELOW:
-            value.value.splice(currentRow.value + 1, 0, { key: '', value: getDefaultValue(props.type.reference.type) });
+            const belowRowValue = { key: '', value: getDefaultValue(props.type.reference.type) };
+            value.value.splice(currentRow.value + 1, 0, belowRowValue);
+            sendEdit(action, null, belowRowValue, currentRow.value + 1);
             break;
     }
 }
 
 /**
- * @param {Object} edit
+ * 
+ * @param {string} action 
+ * @param {any} oldValue 
+ * @param {any} newValue 
+ * @param {number} index 
+ */
+function sendEdit(action, oldValue, newValue, index) {
+    const undoOperationType = action == ContextMenuAction.DELETE ? OperationType.INSERT : OperationType.DELETE;
+    const redoOperationType = action == ContextMenuAction.DELETE ? OperationType.DELETE : OperationType.INSERT;
+    const undo = new Operation(undoOperationType, props.path, oldValue, index);
+    const redo = new Operation(redoOperationType, props.path, newValue, index);
+    handleEdit(new Edit(undo, redo));
+}
+
+/**
+ * @param {Edit} edit
  */
 function handleEdit(edit) {
     emit('edit', edit);

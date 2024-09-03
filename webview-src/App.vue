@@ -130,8 +130,6 @@ function handleEdit(edit) {
 }
 
 vscode.postMessage({ command: OutMessageType.READY });
-
-
 /**
  * 
     load() {
@@ -144,8 +142,6 @@ vscode.postMessage({ command: OutMessageType.READY });
     }
 
     saveAs(targetResource, cancellation) {
-        //TODO: debug
-        return;
         this.uri = targetResource;
         if (cancellation.isCancellationRequested) {
             return;

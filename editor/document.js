@@ -103,25 +103,6 @@ class Document {
 				});
 			}
 		});
-		//TODO: merge edits
-		//this.edits.push(edit);
-		/*
-		this.onDidChange.fire({
-			undo: async () => {
-				this.edits.pop();
-				console.log("undo", this.edits)
-				this.onDidChangeDocument.fire({
-					edits: this.edits,
-				});
-			},
-			redo: async () => {
-				this.edits.push(edit);
-				console.log("redo", this.edits)
-				this.onDidChangeDocument.fire({
-					edits: this.edits,
-				});
-			}
-		});*/
 	}
 
 	/**

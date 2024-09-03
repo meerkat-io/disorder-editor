@@ -17,6 +17,16 @@ th {
     border: 1px solid var(--vscode-editor-foreground);
 }
 
+button {
+    background-color: transparent;
+    border: 0px;
+    color: var(--vscode-editor-foreground);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+
 input {
     width: 100%;
     margin: 0px;
@@ -34,7 +44,7 @@ input:focus {
 select {
     color: var(--vscode-editor-foreground);
     background-color: transparent;
-    border: 0px;
+    border: 1px solid var(--vscode-editor-foreground);
     padding: 2px 4px;
     margin: 0px;
     width: 100%;

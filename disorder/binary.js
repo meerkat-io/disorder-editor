@@ -407,7 +407,7 @@ class Reader {
                 const array = new Array();
                 elementTag = this.readTag();
                 while (elementTag !== Tag.ArrayEnd) {
-                    array.push(this.read(elementTag));
+                    array.push({ value: this.read(elementTag) });
                     elementTag = this.readTag();
                 }
                 return array;
@@ -548,7 +548,7 @@ class Writer {
                     throw new Error(`value ${value} is not a array`);
                 }
                 for (const element of value) {
-                    this.write(element, type.reference);
+                    this.write(element.value, type.reference);
                 }
                 this.writeTag(Tag.ArrayEnd);
                 break;

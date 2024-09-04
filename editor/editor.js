@@ -284,7 +284,7 @@ class EditorProvider {
 					if (document.file.initialized === false) {
 						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
 					} else {
-						const t = new Type('map[string]');
+						//const t = new Type('map[string]');
 						//t.reference = new Type('enum');
 						//t.reference.enums = ['red', 'green', 'blue'];
 
@@ -292,8 +292,8 @@ class EditorProvider {
 						//t.fields['foo'] = new Type('string');
 						//t.fields['bar'] = new Type('int');
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
-							type: t,
-							value: [{ key: 'foo', value: "bar" }],//[{ key: 'key1', value: null }, { key: 'key2', value: null }],
+							type: new Type('array[string]'),
+							value: ["foo", "bar"],//[{ key: 'foo', value: "bar" }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

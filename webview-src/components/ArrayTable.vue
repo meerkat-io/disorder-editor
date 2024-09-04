@@ -91,12 +91,12 @@ onMounted(() => {
 
 <template>
     <span class="collapsed">
-        <span class="badge">Map[{{ value.length }}]</span>
+        <span class="badge">Array[{{ value.length }}]</span>
         <span class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
     </span>
     <table v-if="expanded">
         <table-header :headers="headers" @contextmenu.prevent="showContextMenu($event, -1)" />
-        <tbody>
+        <tbody v-if="props.type.reference.type === Type.STRUCT">
             <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
                     <key v-model="item.key" :path="props.path + index + '.key'" @edit="handleEdit" />
@@ -104,6 +104,16 @@ onMounted(() => {
                 <td>
                     <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
                         @edit="handleEdit" />
+                </td>
+            </tr>
+        </tbody>
+        <tbody v-if="props.type.reference.type !== Type.STRUCT">
+            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
+                <td>
+                    {{ index }}
+                </td>
+                <td>
+                    <cell :type="props.type.reference" v-model="item" :path="props.path + index" @edit="handleEdit" />
                 </td>
             </tr>
         </tbody>

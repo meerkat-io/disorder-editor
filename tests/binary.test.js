@@ -147,7 +147,7 @@ test('read and write enum', () => {
 });
 
 test('read and write array & map', () => {
-    const array = ['hello', 'world'];
+    const array = [{ value: 'hello' }, { value: 'world' }];
     const arrayType = new Type(Type.ARRAY);
     arrayType.reference = new Type(Type.STRING);
 
@@ -188,11 +188,11 @@ test('read and write struct', () => {
     object.push({ key: 'enum_field', value: 'blue' });
     object.push({ key: 'time_field', value: new Date(time) });
     object.push({ key: 'obj_field', value: number });
-    object.push({ key: 'int_array', value: [1, 2, 3] });
+    object.push({ key: 'int_array', value: [{ value: 1 }, { value: 2 }, { value: 3 }] });
     object.push({ key: 'int_map', value: [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }] });
-    object.push({ key: 'obj_array', value: [number, number] });
+    object.push({ key: 'obj_array', value: [{ value: number }, { value: number }] });
     object.push({ key: 'obj_map', value: [{ key: 'foo', value: number }, { key: 'bar', value: number }] });
-    object.push({ key: 'nested', value: [{ key: 'level0', value: [{ key: 'level1', value: [[[{ key: 'level2', value: 'red' }]]] }] }] });
+    object.push({ key: 'nested', value: [{ key: 'level0', value: [{ key: 'level1', value: [{ value: [{ value: [{ key: 'level2', value: 'red' }] }] }] }] }] });
     object.push({ key: 'sub', value: [{ key: 'sub', value: [{ key: 'sub', value: [{ key: 'value', value: 456 }] }] }] });
 
     const writer = new Writer();

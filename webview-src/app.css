@@ -28,7 +28,7 @@ button {
 }
 
 input {
-    width: 100%;
+    width: 100% - 4px;
     margin: 0px;
     padding: 2px 4px;
     vertical-align: baseline;
@@ -39,6 +39,10 @@ input {
 
 input:focus {
     outline: none;
+}
+
+input:invalid {
+    background-color: var(--vscode-inputValidation-errorBackground);
 }
 
 select {

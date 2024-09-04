@@ -6,11 +6,6 @@ const props = defineProps(['type', 'path']);
 const emit = defineEmits(['edit']);
 const value = defineModel({
     set(newValue) {
-        console.log('update value ==============');
-        console.log('old value:', value.value);
-        console.log('new value:', newValue);
-        console.log('type in define:', props.type.type);
-        console.log('type of instance', typeof newValue);
         if (props.type.type == Type.INT || props.type.type == Type.LONG) {
             newValue = Math.floor(newValue);
         }

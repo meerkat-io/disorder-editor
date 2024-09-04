@@ -5,6 +5,7 @@ import { Type } from '../shared'
 import TableHeader from './TableHeader.vue';
 import Cell from './Cell.vue';
 import Value from './Value.vue';
+import Key from './Key.vue';
 import ContextMenu from './ContextMenu.vue';
 import { Edit, Operation, OperationType, ContextMenuAction, getDefaultValue } from '../shared.js';
 
@@ -100,7 +101,7 @@ onMounted(() => {
         <tbody>
             <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
-                    <value :type="new Type(Type.STRING)" v-model="item.key" :path="props.path + index + '.key'"
+                    <key v-model="item.key" :path="props.path + index + '.key'"
                         @edit="handleEdit" />
                 </td>
                 <td>

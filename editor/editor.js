@@ -4,9 +4,6 @@ const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
 
-//tmp
-const { Type } = require('../disorder/schema')
-
 const SchemaStatus = {
 	NONE: 'none',
 	LOAD: 'load',
@@ -284,25 +281,10 @@ class EditorProvider {
 					if (document.file.initialized === false) {
 						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
 					} else {
-						//const t = new Type('map[string]');
-						//t.reference = new Type('enum');
-						//t.reference.enums = ['red', 'green', 'blue'];
-
-						const sub = new Type('struct')
-						sub.fields['foo'] = new Type('string');
-						sub.fields['bar'] = new Type('int');
-
-						const t = new Type('array[sub]');
-						t.reference = sub;
-						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
-							type: t,//new Type('array[string]'),
-							value: [{ value: [{ key: "foo", value: "bar" }] }, { value: [{ key: "bar", value: 456 }] }],//[{value:"foo"}, {value:"bar"}],//[{ key: 'foo', value: "bar" }],
-						});
-						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: document.file.type,
 							value: document.file.value,
-						});*/
+						});
 					}
 				} catch (error) {
 					//TODO: show error message

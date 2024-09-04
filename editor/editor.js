@@ -293,7 +293,7 @@ class EditorProvider {
 						//t.fields['bar'] = new Type('int');
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: new Type('array[string]'),
-							value: ["foo", "bar"],//[{ key: 'foo', value: "bar" }],
+							value: [{value:"foo"}, {value:"bar"}],//[{ key: 'foo', value: "bar" }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

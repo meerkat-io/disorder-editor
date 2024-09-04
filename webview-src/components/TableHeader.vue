@@ -55,7 +55,7 @@ onMounted(() => {
     <thead ref="header">
         <tr>
             <th v-for="{ name, resizable } in headers" :key="name" :ref="(element) => (collumns[name] = element)"
-                :style="{ minWidth: '100px', width: collumnsWidth[name] }">
+                :style="{ minWidth: '50px', width: collumnsWidth[name] }">
                 {{ name }}
                 <div v-if="resizable === true" class="resizer" :style="{ height: headerHeight }"
                     @mousedown="resize(name, $event)" @dblclick="reset(name)"></div>

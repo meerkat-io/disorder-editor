@@ -36,7 +36,7 @@ function showContextMenu(event, index) {
 function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
-            const aboveRowValue = { key: '', value: getDefaultValue(props.type.reference.type) };
+            const aboveRowValue = { key: '', value: generateDefaultValue() };
             value.value.splice(value.value, 0, aboveRowValue);
             sendEdit(action, null, aboveRowValue, currentRow.value);
             break;
@@ -48,10 +48,22 @@ function handleAction(action) {
             break;
 
         case ContextMenuAction.INSERT_BELOW:
-            const belowRowValue = { key: '', value: getDefaultValue(props.type.reference.type) };
+            const belowRowValue = { key: '', value: generateDefaultValue() };
             value.value.splice(currentRow.value + 1, 0, belowRowValue);
             sendEdit(action, null, belowRowValue, currentRow.value + 1);
             break;
+    }
+}
+
+function generateDefaultValue() {
+    if (props.type.reference.type === Type.STRUCT) {
+        const values = [];
+        for (const key of Object.keys(props.type.reference.type.fields)) {
+            values.push({ key: key, value: getDefaultValue(props.type.reference.type.fields[key].type) });
+        }
+        return values;
+    } else {
+        return getDefaultValue(props.type.reference.type);
     }
 }
 
@@ -83,6 +95,7 @@ onMounted(() => {
         for (const key of Object.keys(props.type.reference.type.fields)) {
             headers.value.push({ name: key, resizable: true });
         }
+        //TODO: arrange struct fields in order
     } else {
         headers.value.push({ name: 'value', resizable: true });
     }
@@ -99,9 +112,10 @@ onMounted(() => {
         <tbody v-if="props.type.reference.type === Type.STRUCT">
             <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
                 <td>
-                    <key v-model="item.key" :path="props.path + index + '.key'" @edit="handleEdit" />
+                    {{ index }}
                 </td>
                 <td>
+                    TODO
                     <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
                         @edit="handleEdit" />
                 </td>
@@ -113,7 +127,8 @@ onMounted(() => {
                     {{ index }}
                 </td>
                 <td>
-                    <cell :type="props.type.reference" v-model="item" :path="props.path + index" @edit="handleEdit" />
+                    <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
+                        @edit="handleEdit" />
                 </td>
             </tr>
         </tbody>

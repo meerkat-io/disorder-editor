@@ -70,9 +70,11 @@ class Operation {
 }
 
 const OperationType = {
+    UPDATE: 'update',
     INSERT: 'insert',
     DELETE: 'delete',
-    UPDATE: 'update',
+    RESET: 'reset',
+    PUSH: 'push',
 };
 
 /**

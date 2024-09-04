@@ -78,6 +78,10 @@ function receiveMessage(message) {
  */
 function executeOperation(operation) {
     switch (operation.type) {
+        case OperationType.UPDATE:
+            setValue(operation.path, operation.value);
+            break;
+
         case OperationType.INSERT:
             datagrid.value.value.splice(operation.index, 0, operation.value);
             break;
@@ -86,8 +90,13 @@ function executeOperation(operation) {
             datagrid.value.value.splice(operation.index, 1);
             break;
 
-        case OperationType.UPDATE:
-            setValue(operation.path, operation.value);
+        case OperationType.RESET:
+            const array = getArray(operation.path);
+            array.splice(0, array.length);
+            break;
+
+        case OperationType.PUSH:
+            getArray(operation.path).push(...operation.value);
             break;
     }
 }
@@ -107,15 +116,29 @@ function setValue(path, value) {
 }
 
 /**
+ * @param {string} path
+ */
+function getArray(path) {
+    let obj = datagrid.value.value;
+    if (path !== '') {
+        const parts = path.split('.');
+        for (let i = 0; i < parts.length; i++) {
+            obj = obj[parts[i]];
+        }
+    }
+    return obj;
+}
+
+/**
  * @param {Edit} edit
  */
 function handleEdit(edit) {
     let merged = false;
     if (edits.length > 0) {
         const lastEdit = edits[edits.length - 1];
-        if (lastEdit.undo.path == edit.undo.path
-            && lastEdit.undo.type == OperationType.UPDATE
-            && edit.undo.type == OperationType.UPDATE) {
+        if (lastEdit.undo.path === edit.undo.path
+            && lastEdit.undo.type === OperationType.UPDATE
+            && edit.undo.type === OperationType.UPDATE) {
             lastEdit.redo.value = edit.redo.value;
             merged = true;
         }
@@ -163,11 +186,11 @@ vscode.postMessage({ command: OutMessageType.READY });
 </script>
 
 <template>
-    <schema v-if="view == View.SCHEMA"
+    <schema v-if="view === View.SCHEMA"
         @select="(schemaPath) => vscode.postMessage({ command: OutMessageType.SCHEMA, body: schemaPath })"
         :status="schema" />
-    <message v-if="view == View.MESSAGE"
+    <message v-if="view === View.MESSAGE"
         @select="(message) => vscode.postMessage({ command: OutMessageType.MESSAGE, body: message })"
         :messages="messages" />
-    <cell v-else-if="view == View.DATA" :type="datagrid.type" v-model="datagrid.value" :path="''" @edit="handleEdit" />
+    <cell v-else-if="view === View.DATA" :type="datagrid.type" v-model="datagrid.value" :path="''" @edit="handleEdit" />
 </template>

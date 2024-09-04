@@ -18,7 +18,7 @@ function handleEdit(edit) {
 </script>
 
 <template>
-    <map-table v-if="props.type.type == Type.MAP" :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
-    <struct-table v-else-if="props.type.type == Type.STRUCT" :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
+    <map-table v-if="props.type.type === Type.MAP" :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
+    <struct-table v-else-if="props.type.type === Type.STRUCT" :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
     <value v-else :type="props.type" v-model="value" :path="props.path" @edit="handleEdit" />
 </template>

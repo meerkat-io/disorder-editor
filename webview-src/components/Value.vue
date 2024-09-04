@@ -6,7 +6,7 @@ const props = defineProps(['type', 'path']);
 const emit = defineEmits(['edit']);
 const value = defineModel({
     set(newValue) {
-        if (props.type.type == Type.INT || props.type.type == Type.LONG) {
+        if (props.type.type === Type.INT || props.type.type === Type.LONG) {
             newValue = Math.floor(newValue);
         }
 
@@ -28,7 +28,7 @@ function sendEdit(oldValue, newValue) {
 
 function load(event) {
     const file = event.target.files[0];
-    if (file == null) {
+    if (file === null) {
         return;
     }
     var reader = new FileReader();
@@ -43,18 +43,18 @@ function onload(event) {
 </script>
 
 <template>
-    <input v-if="props.type.type == Type.BOOL" type="checkbox" v-model="value" />
-    <input v-if="props.type.type == Type.INT || props.type.type == Type.LONG" type="number" v-model="value" />
-    <input v-if="props.type.type == Type.FLOAT || props.type.type == Type.DOUBLE" type="number" v-model="value" />
-    <div v-if="props.type.type == Type.BYTES">
+    <input v-if="props.type.type === Type.BOOL" type="checkbox" v-model="value" />
+    <input v-if="props.type.type === Type.INT || props.type.type === Type.LONG" type="number" v-model="value" />
+    <input v-if="props.type.type === Type.FLOAT || props.type.type === Type.DOUBLE" type="number" v-model="value" />
+    <div v-if="props.type.type === Type.BYTES">
         <input type='file' ref="upload" style="display:none" @change="load">
         <button @click="upload.click()">load bytes</button>
-        <label v-if="value == null">[0]</label>
+        <label v-if="value === null">[0]</label>
         <label v-else>[{{ value.length }}]</label>
     </div>
-    <input v-if="props.type.type == Type.STRING" type="text" v-model="value" />
-    <input v-if="props.type.type == Type.TIMESTAMP" type="datetime-local" step="0.001" v-model="value" />
-    <select v-if="props.type.type == Type.ENUM" v-model="value">
+    <input v-if="props.type.type === Type.STRING" type="text" v-model="value" />
+    <input v-if="props.type.type === Type.TIMESTAMP" type="datetime-local" step="0.001" v-model="value" />
+    <select v-if="props.type.type === Type.ENUM" v-model="value">
         <option v-for="item in props.type.enums">{{ item }}</option>
     </select>
 </template>

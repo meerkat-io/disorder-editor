@@ -29,7 +29,7 @@ function toggle() {
  * @param {number} index
  */
 function showContextMenu(event, index) {
-    contextMenuLocation.value = { x: event.clientX, y: event.clientY, header: index == -1 };
+    contextMenuLocation.value = { x: event.clientX, y: event.clientY, header: index === -1 };
     contextMenuVisable.value = true;
     currentRow.value = index;
 }
@@ -67,8 +67,8 @@ function handleAction(action) {
  * @param {number} index 
  */
 function sendEdit(action, oldValue, newValue, index) {
-    const undoOperationType = action == ContextMenuAction.DELETE ? OperationType.INSERT : OperationType.DELETE;
-    const redoOperationType = action == ContextMenuAction.DELETE ? OperationType.DELETE : OperationType.INSERT;
+    const undoOperationType = action === ContextMenuAction.DELETE ? OperationType.INSERT : OperationType.DELETE;
+    const redoOperationType = action === ContextMenuAction.DELETE ? OperationType.DELETE : OperationType.INSERT;
     const undo = new Operation(undoOperationType, props.path, oldValue, index);
     const redo = new Operation(redoOperationType, props.path, newValue, index);
     handleEdit(new Edit(undo, redo));

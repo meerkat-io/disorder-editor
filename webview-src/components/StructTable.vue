@@ -39,7 +39,7 @@ onMounted(() => {
         for (const key of Object.keys(props.type.fields)) {
             let found = false;
             for (const item of value.value) {
-                if (item.key == key) {
+                if (item.key === key) {
                     fields.push(item);
                     found = true;
                     break;

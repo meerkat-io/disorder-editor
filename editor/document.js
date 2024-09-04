@@ -128,6 +128,7 @@ class Document {
 	 */
 	saveAs(targetResource, cancellation) {
 		//TODO: debug
+		throw new Error("Method not implemented.");
 		return;
 		this.uri = targetResource;
 		if (cancellation.isCancellationRequested) {

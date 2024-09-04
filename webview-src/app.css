@@ -76,3 +76,13 @@ select {
     border: 1px solid;
     border-radius: 3px;
 }
+
+.text-button {
+    display: inline-block;
+    text-align: center;
+    margin-left: 4px;
+    cursor: pointer;
+    border: 1px solid;
+    border-radius: 3px;
+    padding: 1px 0.5em;
+}

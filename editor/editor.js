@@ -284,12 +284,15 @@ class EditorProvider {
 					if (document.file.initialized === false) {
 						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
 					} else {
-						const t = new Type('map[bytes]');
+						//const t = new Type('map[bytes]');
 						//t.reference = new Type('enum');
 						//t.reference.enums = ['red', 'green', 'blue'];
+						const t = new Type('struct')
+						t.fields['foo'] = new Type('string');
+						t.fields['bar'] = new Type('int');
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: t,
-							value: [{ key: 'key1', value: null }, { key: 'key2', value: null }],
+							value: [{ key: 'bar', value: 123 }],//[{ key: 'key1', value: null }, { key: 'key2', value: null }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

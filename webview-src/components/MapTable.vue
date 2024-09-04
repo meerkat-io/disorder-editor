@@ -1,10 +1,8 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { Type } from '../shared'
 
 import TableHeader from './TableHeader.vue';
 import Cell from './Cell.vue';
-import Value from './Value.vue';
 import Key from './Key.vue';
 import ContextMenu from './ContextMenu.vue';
 import { Edit, Operation, OperationType, ContextMenuAction, getDefaultValue } from '../shared.js';
@@ -83,12 +81,6 @@ function sendEdit(action, oldValue, newValue, index) {
 function handleEdit(edit) {
     emit('edit', edit);
 }
-
-onMounted(() => {
-    if (value.value == null) {
-        value.value = [];
-    }
-});
 </script>
 
 <template>

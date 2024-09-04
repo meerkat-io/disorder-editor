@@ -36,7 +36,7 @@ function showContextMenu(event, index) {
 function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
-            const aboveRowValue = { key: '', value: generateDefaultValue() };
+            const aboveRowValue = { value: generateDefaultValue() };
             value.value.splice(value.value, 0, aboveRowValue);
             sendEdit(action, null, aboveRowValue, currentRow.value);
             break;
@@ -48,7 +48,7 @@ function handleAction(action) {
             break;
 
         case ContextMenuAction.INSERT_BELOW:
-            const belowRowValue = { key: '', value: generateDefaultValue() };
+            const belowRowValue = { value: generateDefaultValue() };
             value.value.splice(currentRow.value + 1, 0, belowRowValue);
             sendEdit(action, null, belowRowValue, currentRow.value + 1);
             break;
@@ -58,8 +58,8 @@ function handleAction(action) {
 function generateDefaultValue() {
     if (props.type.reference.type === Type.STRUCT) {
         const values = [];
-        for (const key of Object.keys(props.type.reference.type.fields)) {
-            values.push({ key: key, value: getDefaultValue(props.type.reference.type.fields[key].type) });
+        for (const key of Object.keys(props.type.reference.fields)) {
+            values.push({ key: key, value: getDefaultValue(props.type.reference.fields[key].type) });
         }
         return values;
     } else {
@@ -92,10 +92,9 @@ function handleEdit(edit) {
 onMounted(() => {
     headers.value.push({ name: '', resizable: false });
     if (props.type.reference.type === Type.STRUCT) {
-        for (const key of Object.keys(props.type.reference.type.fields)) {
+        for (const key of Object.keys(props.type.reference.fields)) {
             headers.value.push({ name: key, resizable: true });
         }
-        //TODO: arrange struct fields in order
     } else {
         headers.value.push({ name: 'value', resizable: true });
     }
@@ -114,10 +113,9 @@ onMounted(() => {
                 <td>
                     {{ index }}
                 </td>
-                <td>
-                    TODO
-                    <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
-                        @edit="handleEdit" />
+                <td v-for="(subItem, subIndex) in item.value" :key="index + '.' + subIndex">
+                    <cell :type="props.type.reference.fields[subItem.key]" v-model="subItem.value"
+                        :path="props.path + index + '.value.' + subIndex + '.value'" @edit="handleEdit" />
                 </td>
             </tr>
         </tbody>

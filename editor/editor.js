@@ -288,12 +288,15 @@ class EditorProvider {
 						//t.reference = new Type('enum');
 						//t.reference.enums = ['red', 'green', 'blue'];
 
-						//const t = new Type('struct')
-						//t.fields['foo'] = new Type('string');
-						//t.fields['bar'] = new Type('int');
+						const sub = new Type('struct')
+						sub.fields['foo'] = new Type('string');
+						sub.fields['bar'] = new Type('int');
+
+						const t = new Type('array[sub]');
+						t.reference = sub;
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
-							type: new Type('array[string]'),
-							value: [{value:"foo"}, {value:"bar"}],//[{ key: 'foo', value: "bar" }],
+							type: t,//new Type('array[string]'),
+							value: [],//[{value:"foo"}, {value:"bar"}],//[{ key: 'foo', value: "bar" }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

@@ -15,18 +15,18 @@ const SchemaStatus = {
 };
 
 const InMessageType = {
-    SCHEMA: 'schema',
-    MESSAGE: 'message',
-    EDIT: 'edit',
-    READY: 'ready',
+	SCHEMA: 'schema',
+	MESSAGE: 'message',
+	EDIT: 'edit',
+	READY: 'ready',
 };
 
 const OutMessageType = {
-    SELECT_SCHEMA: 'select_schema',
-    SELECT_MESSAGE: 'select_message',
-    SHOW_DATAGRID: 'show_datagrid',
-    UNDO: 'undo',
-    REDO: 'redo',
+	SELECT_SCHEMA: 'select_schema',
+	SELECT_MESSAGE: 'select_message',
+	SHOW_DATAGRID: 'show_datagrid',
+	UNDO: 'undo',
+	REDO: 'redo',
 };
 
 /**
@@ -296,7 +296,7 @@ class EditorProvider {
 						t.reference = sub;
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: t,//new Type('array[string]'),
-							value: [],//[{value:"foo"}, {value:"bar"}],//[{ key: 'foo', value: "bar" }],
+							value: [{ value: [{ key: "foo", value: "bar" }] }, { value: [{ key: "bar", value: 456 }] }],//[{value:"foo"}, {value:"bar"}],//[{ key: 'foo', value: "bar" }],
 						});
 						/*
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {

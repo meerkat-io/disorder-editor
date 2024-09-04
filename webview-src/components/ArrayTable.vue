@@ -95,6 +95,26 @@ onMounted(() => {
         for (const key of Object.keys(props.type.reference.fields)) {
             headers.value.push({ name: key, resizable: true });
         }
+        if (value.value.length > 0) {
+            for (const item of value.value) {
+                const fields = [];
+                for (const key of Object.keys(props.type.reference.fields)) {
+                    let found = false;
+                    for (const subItem of item.value) {
+                        if (subItem.key === key) {
+                            fields.push(subItem);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        fields.push({ key: key, value: getDefaultValue(props.type.reference.fields[key].type) });
+                    }
+                }
+                item.value.splice(0, item.value.length);
+                item.value.push(...fields);
+            }
+        }
     } else {
         headers.value.push({ name: 'value', resizable: true });
     }

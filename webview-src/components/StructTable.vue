@@ -55,24 +55,22 @@ function handleEdit(edit) {
 }
 
 onMounted(() => {
-    if (value.value.length > 0) {
-        const fields = [];
-        for (const key of Object.keys(props.type.fields)) {
-            let found = false;
-            for (const item of value.value) {
-                if (item.key === key) {
-                    fields.push(item);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                fields.push({ key: key, value: getDefaultValue(props.type.fields[key].type) });
+    const fields = [];
+    for (const key of Object.keys(props.type.fields)) {
+        let found = false;
+        for (const item of value.value) {
+            if (item.key === key) {
+                fields.push(item);
+                found = true;
+                break;
             }
         }
-        value.value.splice(0, value.value.length);
-        value.value.push(...fields);
+        if (!found) {
+            fields.push({ key: key, value: getDefaultValue(props.type.fields[key].type) });
+        }
     }
+    value.value.splice(0, value.value.length);
+    value.value.push(...fields);
 });
 </script>
 

@@ -95,7 +95,7 @@ function executeOperation(operation) {
             array.splice(0, array.length);
             break;
 
-        case OperationType.PUSH:
+        case OperationType.COPY:
             getArray(operation.path).push(...operation.value);
             break;
     }

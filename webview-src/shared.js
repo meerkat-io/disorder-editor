@@ -74,7 +74,7 @@ const OperationType = {
     INSERT: 'insert',
     DELETE: 'delete',
     RESET: 'reset',
-    PUSH: 'push',
+    COPY: 'copy',
 };
 
 /**

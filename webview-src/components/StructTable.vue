@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import Cell from './Cell.vue';
-import { Edit, getDefaultValue } from '../shared.js';
+import { Edit, Operation, OperationType, getDefaultValue } from '../shared.js';
 
 const props = defineProps(['type', 'path']);
 const value = defineModel();
@@ -19,11 +19,27 @@ function initialize() {
         value.value.push({ key: key, value: getDefaultValue(props.type.fields[key].type) });
     }
     expanded.value = true;
+    const array = [...value.value];
+    sendEdit(OperationType.COPY, array);
 }
 
 function destroy() {
+    const array = [...value.value];
     value.value.splice(0, value.value.length);
     expanded.value = false;
+    sendEdit(OperationType.RESET, array);
+}
+
+/**
+ * 
+ * @param {string} operationType 
+ * @param {Array} array 
+ */
+ function sendEdit(operationType, array) {
+    const undoOperationType = operationType === OperationType.RESET ? OperationType.COPY : OperationType.RESET;
+    const undo = new Operation(undoOperationType, props.path, array, -1);
+    const redo = new Operation(operationType, props.path, array, -1);
+    handleEdit(new Edit(undo, redo));
 }
 
 /**

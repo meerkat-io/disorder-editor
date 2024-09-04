@@ -1,6 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-
+import { ref } from 'vue'
 import TableHeader from './TableHeader.vue';
 import Cell from './Cell.vue';
 import Key from './Key.vue';

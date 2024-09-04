@@ -1,7 +1,5 @@
-//TODO set struct to null
 <script setup>
 import { onMounted, ref } from 'vue'
-
 import Cell from './Cell.vue';
 import { Edit, getDefaultValue } from '../shared.js';
 
@@ -10,7 +8,6 @@ const value = defineModel();
 const emit = defineEmits(['edit']);
 
 const expanded = ref(false);
-const initialized = ref(false);
 
 function toggle() {
     expanded.value = !expanded.value;
@@ -22,13 +19,11 @@ function initialize() {
         value.value.push({ key: key, value: getDefaultValue(props.type.fields[key].type) });
     }
     expanded.value = true;
-    initialized.value = true;
 }
 
 function destroy() {
     value.value.splice(0, value.value.length);
     expanded.value = false;
-    initialized.value = false;
 }
 
 /**
@@ -40,7 +35,6 @@ function handleEdit(edit) {
 
 onMounted(() => {
     if (value.value.length > 0) {
-        initialized.value = true;
         const fields = [];
         for (const key of Object.keys(props.type.fields)) {
             let found = false;
@@ -64,11 +58,11 @@ onMounted(() => {
 <template>
     <span class="collapsed">
         <span class="badge">Struct</span>
-        <span v-if="initialized" class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
-        <span v-if="initialized" class="text-button" @click="destroy">Destroy</span>
+        <span v-if="value.length > 0" class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
+        <span v-if="value.length > 0" class="text-button" @click="destroy">Destroy</span>
         <span v-else class="text-button" @click="initialize">Initialize</span>
     </span>
-    <table v-if="expanded && initialized">
+    <table v-if="expanded && value.length > 0">
         <tr v-for="(item, index) in value" :key="index">
             <td>
                 {{ item.key }}

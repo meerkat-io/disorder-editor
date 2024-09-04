@@ -1,5 +1,4 @@
 <script setup>
-
 import { Type } from '../shared'
 
 import StructTable from './StructTable.vue';

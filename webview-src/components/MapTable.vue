@@ -12,8 +12,8 @@ const emit = defineEmits(['edit']);
 
 const expanded = ref(false);
 const headers = ref([
-    { name: 'Key', resizable: true },
-    { name: 'Value', resizable: true },
+    { name: 'key', resizable: true },
+    { name: 'value', resizable: true },
 ]);
 
 const contextMenuVisable = ref(false)

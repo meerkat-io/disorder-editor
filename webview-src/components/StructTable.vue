@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import Cell from './Cell.vue';
+import TableHeader from './TableHeader.vue';
 import { Edit, Operation, OperationType, getDefaultValue } from '../shared.js';
 
 const props = defineProps(['type', 'path']);
@@ -8,6 +9,10 @@ const value = defineModel();
 const emit = defineEmits(['edit']);
 
 const expanded = ref(false);
+const headers = ref([
+    { name: 'field', resizable: false },
+    { name: 'value', resizable: true },
+]);
 
 function toggle() {
     expanded.value = !expanded.value;
@@ -75,18 +80,21 @@ onMounted(() => {
     <span class="collapsed">
         <span class="badge">Struct</span>
         <span v-if="value.length > 0" class="expand" @click="toggle">{{ expanded ? '-' : '+' }}</span>
-        <span v-if="value.length > 0" class="text-button" @click="destroy">Destroy</span>
-        <span v-else class="text-button" @click="initialize">Initialize</span>
+        <span v-if="value.length > 0" class="text-button" @click="destroy">destroy</span>
+        <span v-else class="text-button" @click="initialize">initialize</span>
     </span>
     <table v-if="expanded && value.length > 0">
-        <tr v-for="(item, index) in value" :key="index">
-            <td>
-                {{ item.key }}
-            </td>
-            <td>
-                <cell :type="props.type.fields[item.key]" v-model="item.value" :path="props.path + index + '.value'"
-                    @edit="handleEdit" />
-            </td>
-        </tr>
+        <table-header :headers="headers" />
+        <tbody>
+            <tr v-for="(item, index) in value" :key="index">
+                <td>
+                    {{ item.key }}
+                </td>
+                <td>
+                    <cell :type="props.type.fields[item.key]" v-model="item.value" :path="props.path + index + '.value'"
+                        @edit="handleEdit" />
+                </td>
+            </tr>
+        </tbody>
     </table>
 </template>

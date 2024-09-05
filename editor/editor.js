@@ -312,7 +312,7 @@ class EditorProvider {
 				return;
 
 			case InMessageType.SAVE:
-				document.file.write(JSON.parse(message.body));
+				document.file.write(message.body);
 				console.log("save data in editor:", message.body)
 				return;
 		}

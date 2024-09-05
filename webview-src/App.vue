@@ -75,7 +75,7 @@ function receiveMessage(message) {
             console.log('save');
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);
-            vscode.postMessage({ command: OutMessageType.SAVE, body: JSON.stringify(datagrid.value.value) });
+            vscode.postMessage({ command: OutMessageType.SAVE, body: [...datagrid.value.value] });
             break;
 
         //SaveAs? not save edits

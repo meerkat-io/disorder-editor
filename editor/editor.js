@@ -306,7 +306,7 @@ class EditorProvider {
 
 			case InMessageType.MESSAGE:
 				document.file.setMessage(message.body.message, message.body.container);
-				document.file.write({});
+				document.file.write([]);
 				this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 					type: document.file.type,
 					value: document.file.value,

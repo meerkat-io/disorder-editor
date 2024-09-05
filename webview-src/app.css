@@ -26,6 +26,7 @@ button {
     text-decoration: none;
     display: inline-block;
     cursor: pointer;
+    border-radius: 3px;
 }
 
 input {
@@ -54,6 +55,7 @@ select {
     margin: 0px;
     width: 100%;
     vertical-align: baseline;
+    border-radius: 3px;
 }
 
 .collapsed {

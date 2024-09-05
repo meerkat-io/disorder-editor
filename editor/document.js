@@ -114,19 +114,19 @@ class Document {
 
 	/**
 	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	save(cancellation) {
+	async save(cancellation) {
 		this.saveAs(this.uri, cancellation);
-		this.savedEdits = Array.from(this.edits);
+		this.savedEdits = [...this.edits];
 	}
 
 	/**
 	 * @param {vscode.Uri} targetResource
 	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	saveAs(targetResource, cancellation) {
+	async saveAs(targetResource, cancellation) {
 		//TODO: debug
 		throw new Error("Method not implemented.");
 		return;
@@ -140,9 +140,9 @@ class Document {
 
 	/**
 	 * @param {vscode.CancellationToken} _cancellation
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	revert(_cancellation) {
+	async revert(_cancellation) {
 		this.load();
 		this.edits = this.savedEdits;
 		/* TODO
@@ -155,10 +155,12 @@ class Document {
 	/**
 	 * @param {vscode.Uri} destination
 	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {vscode.CustomDocumentBackup}
+	 * @returns {Promise<vscode.CustomDocumentBackup>}
 	 */
-	backup(destination, cancellation) {
-		this.saveAs(destination, cancellation);
+	async backup(destination, cancellation) {
+		console.log("backup:", destination.path);
+		console.log(cancellation)
+		//this.saveAs(destination, cancellation);
 
 		return {
 			id: destination.toString(),

@@ -70,6 +70,15 @@ function receiveMessage(message) {
             edits.push(redo);
             executeOperation(redo.redo);
             break;
+
+        case InMessageType.SAVE:
+            console.log('save');
+            savedEdits.splice(0, savedEdits.length);
+            savedEdits.push(...edits);
+            vscode.postMessage({ command: OutMessageType.SAVE, body: JSON.stringify(datagrid.value.value) });
+            break;
+
+        //SaveAs? not save edits
     }
 }
 
@@ -83,11 +92,11 @@ function executeOperation(operation) {
             break;
 
         case OperationType.INSERT:
-            datagrid.value.value.splice(operation.index, 0, operation.value);
+            getArray(operation.path).splice(operation.index, 0, operation.value);
             break;
 
         case OperationType.DELETE:
-            datagrid.value.value.splice(operation.index, 1);
+            getArray(operation.path).splice(operation.index, 1);
             break;
 
         case OperationType.RESET:

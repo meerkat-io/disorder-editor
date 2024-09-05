@@ -16,14 +16,13 @@ const InMessageType = {
 	MESSAGE: 'message',
 	EDIT: 'edit',
 	READY: 'ready',
+	SAVE: 'save',
 };
 
 const OutMessageType = {
 	SELECT_SCHEMA: 'select_schema',
 	SELECT_MESSAGE: 'select_message',
 	SHOW_DATAGRID: 'show_datagrid',
-	UNDO: 'undo',
-	REDO: 'redo',
 };
 
 /**
@@ -74,12 +73,12 @@ class EditorProvider {
 	//#region CustomEditorProvider
 	/**
 	 * @param {vscode.Uri} uri 
-	 * @param {{backupId?: string}} openContext 
+	 * @param {{backupId?: string}} _openContext 
 	 * @param {vscode.CancellationToken} _token 
 	 * @returns {Promise<Document>}
 	 */
-	async openCustomDocument(uri, openContext, _token) {
-		const document = Document.create(uri, openContext.backupId);
+	async openCustomDocument(uri, _openContext, _token) {
+		const document = Document.create(uri);
 
 		const listeners = [];
 		listeners.push(document.onDidChange.event(e => {
@@ -119,11 +118,9 @@ class EditorProvider {
 	/**
 	 * @param {Document} document 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	saveCustomDocument(document, cancellation) {
-		//TODO: fetch data from webview then save
-		console.log("saveCustomDocument");
+	async saveCustomDocument(document, cancellation) {
 		return document.save(cancellation);
 	}
 
@@ -131,20 +128,18 @@ class EditorProvider {
 	 * @param {Document} document 
 	 * @param {vscode.Uri} destination 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	saveCustomDocumentAs(document, destination, cancellation) {
-		//TODO: fetch data from webview then save as
+	async saveCustomDocumentAs(document, destination, cancellation) {
 		document.saveAs(destination, cancellation);
 	}
 
 	/**
 	 * @param {Document} document 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	revertCustomDocument(document, cancellation) {
-		//TODO
+	async revertCustomDocument(document, cancellation) {
 		document.revert(cancellation);
 	}
 
@@ -152,10 +147,9 @@ class EditorProvider {
 	 * @param {Document} document 
 	 * @param {vscode.CustomDocumentBackupContext} context 
 	 * @param {vscode.CancellationToken} cancellation 
-	 * @returns {vscode.CustomDocumentBackup}
+	 * @returns {Promise<vscode.CustomDocumentBackup>}
 	 */
-	backupCustomDocument(document, context, cancellation) {
-		//TODO
+	async backupCustomDocument(document, context, cancellation) {
 		return document.backup(context.destination, cancellation);
 	}
 	//#endregion
@@ -283,7 +277,7 @@ class EditorProvider {
 					} else {
 						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 							type: document.file.type,
-							value: document.file.value,
+							value: document.file.content,
 						});
 					}
 				} catch (error) {
@@ -309,12 +303,17 @@ class EditorProvider {
 				document.file.write([]);
 				this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
 					type: document.file.type,
-					value: document.file.value,
+					value: document.file.content,
 				});
 				return;
 
 			case InMessageType.EDIT:
 				document.edit();
+				return;
+
+			case InMessageType.SAVE:
+				document.file.write(JSON.parse(message.body));
+				console.log("save data in editor:", message.body)
 				return;
 		}
 	}

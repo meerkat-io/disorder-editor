@@ -11,7 +11,6 @@ const { Writer, Reader, ByteArray } = require('./binary');
  * @property {string} message
  * @property {string} container
  * @property {Type} type
- * @property {any} value
  * @property {boolean} initialized
  */
 class File {
@@ -48,7 +47,7 @@ class File {
         /**
          * @type {any}
          */
-        this.value = null;
+        this.content = null;
         /**
          * @type {boolean}
          */
@@ -92,7 +91,7 @@ class File {
      * @returns {void}
      */
     write(value) {
-        this.value = value;
+        this.content = value;
 
         const header = [];
         header.push({ key: HeaderName.SCHEMA, value: this.schemaPath });
@@ -106,7 +105,7 @@ class File {
     }
 
     /**
-     * @returns {any}
+     * @returns {void}
      */
     read() {
         const bytes = fs.readFileSync(this.filePath);
@@ -122,8 +121,7 @@ class File {
         this.schema.load(schemaPath);
 
         this.setMessage(this.readHeader(header, HeaderName.MESSAGE), this.readHeader(header, HeaderName.CONTAINER));
-        this.value = reader.read();
-        return this.value;
+        this.content = reader.read();
     }
 
     /**

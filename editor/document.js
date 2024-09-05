@@ -2,6 +2,12 @@
 const vscode = require('vscode')
 const { File } = require('../disorder/file');
 
+const OutMessageType = {
+	UNDO: 'undo',
+	REDO: 'redo',
+	SAVE: 'save',
+};
+
 /**
  * @public
  * @property {vscode.Uri} uri
@@ -56,13 +62,10 @@ class Document {
 
 	/**
 	 * @param {vscode.Uri} uri
-	 * @param {string | undefined} backupId
 	 * @returns {Document}
 	 */
-	static create(uri, backupId) {
-		// If we have a backup, read that. Otherwise read the resource from the workspace
-		const filePath = typeof backupId === 'string' ? vscode.Uri.parse(backupId) : uri;
-		const document = new Document(filePath);
+	static create(uri) {
+		const document = new Document(uri);
 		document.load();
 		return document;
 	}
@@ -94,12 +97,12 @@ class Document {
 		this.onDidChange.fire({
 			undo: async () => {
 				this.onDidChangeDocument.fire({
-					action: "undo",
+					action: OutMessageType.UNDO,
 				});
 			},
 			redo: async () => {
 				this.onDidChangeDocument.fire({
-					action: "redo",
+					action: OutMessageType.REDO,
 				});
 			}
 		});
@@ -118,7 +121,6 @@ class Document {
 	 */
 	async save(cancellation) {
 		this.saveAs(this.uri, cancellation);
-		this.savedEdits = [...this.edits];
 	}
 
 	/**
@@ -127,15 +129,14 @@ class Document {
 	 * @returns {Promise<void>}
 	 */
 	async saveAs(targetResource, cancellation) {
-		//TODO: debug
-		throw new Error("Method not implemented.");
-		return;
 		this.uri = targetResource;
 		if (cancellation.isCancellationRequested) {
 			return;
 		}
 		this.file.filePath = this.uri.path;
-		this.file.write(this.file.value);
+		this.onDidChangeDocument.fire({
+			action: OutMessageType.SAVE,
+		});
 	}
 
 	/**
@@ -144,33 +145,22 @@ class Document {
 	 */
 	async revert(_cancellation) {
 		this.load();
-		this.edits = this.savedEdits;
-		/* TODO
+		/* TODO send revert command to webview
 		this.onDidChangeDocument.fire({
 			content: fs.readFileSync(this.uri.fsPath),
-			edits: this.edits,
 		});*/
 	}
 
 	/**
 	 * @param {vscode.Uri} destination
-	 * @param {vscode.CancellationToken} cancellation
+	 * @param {vscode.CancellationToken} _cancellationToken
 	 * @returns {Promise<vscode.CustomDocumentBackup>}
 	 */
-	async backup(destination, cancellation) {
-		console.log("backup:", destination.path);
-		console.log(cancellation)
-		//this.saveAs(destination, cancellation);
-
+	async backup(destination, _cancellationToken) {
+		//backup feature is disabled
 		return {
 			id: destination.toString(),
-			delete: async () => {
-				try {
-					await vscode.workspace.fs.delete(destination);
-				} catch {
-					// noop
-				}
-			}
+			delete: async () => {}
 		};
 	}
 }

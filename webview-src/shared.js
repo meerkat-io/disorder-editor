@@ -128,6 +128,7 @@ const OutMessageType = {
     MESSAGE: 'message',
     EDIT: 'edit',
     READY: 'ready',
+    SAVE: 'save',
 };
 
 const InMessageType = {
@@ -136,6 +137,7 @@ const InMessageType = {
     SHOW_DATAGRID: 'show_datagrid',
     UNDO: 'undo',
     REDO: 'redo',
+    SAVE: 'save',
 };
 
 export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, OutMessageType, InMessageType, getDefaultValue };

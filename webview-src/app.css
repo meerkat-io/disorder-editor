@@ -20,7 +20,7 @@ th {
 button {
     background-color: transparent;
     padding: 2px 4px;
-    border: 0px;
+    border: 1px solid var(--vscode-editor-foreground);
     color: var(--vscode-editor-foreground);
     text-align: center;
     text-decoration: none;

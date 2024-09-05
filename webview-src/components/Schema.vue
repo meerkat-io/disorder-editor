@@ -1,8 +1,10 @@
 <script setup>
+import { ref } from 'vue';
 import { SchemaStatus } from '../shared';
 
 const props = defineProps(['status']);
 const emit = defineEmits(['select']);
+const upload = ref();
 
 function onSelect(event) {
     const file = event.target.files[0];
@@ -14,10 +16,10 @@ function onSelect(event) {
 </script>
 
 <template>
-    <input ref="upload" :disabled="status === SchemaStatus.VALID" type="file" name="upload" accept=".yaml, .yml"
-        @change="onSelect" />
+    <input type='file' ref="upload" style="display:none" :disabled="props.status === SchemaStatus.VALID" accept=".yaml, .yml"
+    @change="onSelect" />
+    <button @click="upload.click()">load schema</button>
     <br>
-    <label v-if="status === SchemaStatus.LOAD">Select schema file (yaml)</label>
-    <label v-else-if="status === SchemaStatus.INVALID">Schema file is invalid or corrupt, select a valid file
-        instead</label>
+    <br>
+    <label v-if="props.status === SchemaStatus.INVALID">Schema file is invalid or corrupt, select another one.</label>
 </template>

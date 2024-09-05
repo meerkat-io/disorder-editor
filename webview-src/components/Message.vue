@@ -19,13 +19,13 @@ function onSelect() {
 </script>
 
 <template>
-    <select v-model="message">
+    <select v-model="message" :style="{ width: '160px' }">
         <option disabled value="">Select message type</option>
         <option v-for="message in messages">{{ message }}</option>
     </select>
-    <select v-model="container">
+    <select v-model="container" :style="{ width: '160px', marginLeft: '20px' }">
         <option disabled value="">Select container type</option>
-        <option v-for="value in Container" :value="value">{{ value }}</option>
+        <option v-for=" value in Container" :value="value">{{ value }}</option>
     </select>
-    <button :disabled="submitDisabled" @click="onSelect">Submit</button>
+    <button :disabled="submitDisabled" :style="{ width: '60px', marginLeft: '20px' }" @click="onSelect">Select</button>
 </template>

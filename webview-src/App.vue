@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue'
 import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
-import { OutMessageType, InMessageType, Edit, Operation, OperationType } from './shared'
+import { MessageType, Edit, Operation, OperationType } from './shared'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -40,42 +40,42 @@ onMounted(() => {
 
 function receiveMessage(message) {
     switch (message.command) {
-        case InMessageType.SELECT_SCHEMA:
+        case MessageType.SCHEMA:
             view.value = View.SCHEMA;
             schema.value = message.body;
             break;
 
-        case InMessageType.SELECT_MESSAGE:
+        case MessageType.MESSAGE:
             view.value = View.MESSAGE;
             messages.value = message.body;
             break;
 
-        case InMessageType.SHOW_DATAGRID:
+        case MessageType.DATAGRID:
             console.log('show datagrid');
             console.log(message.body);
             view.value = View.DATA;
             datagrid.value = message.body;
             break;
 
-        case InMessageType.UNDO:
+        case MessageType.UNDO:
             console.log('undo');
             const undo = edits.pop();
             redoEdits.push(undo);
             executeOperation(undo.undo);
             break;
 
-        case InMessageType.REDO:
+        case MessageType.REDO:
             console.log('redo');
             const redo = redoEdits.pop();
             edits.push(redo);
             executeOperation(redo.redo);
             break;
 
-        case InMessageType.SAVE:
+        case MessageType.SAVE:
             console.log('save');
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);
-            vscode.postMessage({ command: OutMessageType.SAVE, body: [...datagrid.value.value] });
+            vscode.postMessage({ command: MessageType.SAVE, body: [...datagrid.value.value] });
             break;
 
         //SaveAs? not save edits
@@ -157,11 +157,11 @@ function handleEdit(edit) {
     }
     if (!merged) {
         edits.push(edit);
-        vscode.postMessage({ command: OutMessageType.EDIT });
+        vscode.postMessage({ command: MessageType.EDIT });
     }
 }
 
-vscode.postMessage({ command: OutMessageType.READY });
+vscode.postMessage({ command: MessageType.READY });
 /**
  * 
     load() {
@@ -196,10 +196,10 @@ vscode.postMessage({ command: OutMessageType.READY });
 
 <template>
     <schema v-if="view === View.SCHEMA"
-        @select="(schemaPath) => vscode.postMessage({ command: OutMessageType.SCHEMA, body: schemaPath })"
+        @select="(schemaPath) => vscode.postMessage({ command: MessageType.SCHEMA, body: schemaPath })"
         :status="schema" />
     <message v-if="view === View.MESSAGE"
-        @select="(message) => vscode.postMessage({ command: OutMessageType.MESSAGE, body: message })"
+        @select="(message) => vscode.postMessage({ command: MessageType.MESSAGE, body: message })"
         :messages="messages" />
     <cell v-else-if="view === View.DATA" :type="datagrid.type" v-model="datagrid.value" :path="''" @edit="handleEdit" />
 </template>

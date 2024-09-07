@@ -123,21 +123,16 @@ const ContextMenuAction = {
     DELETE: 'delete',
 }
 
-const OutMessageType = {
-    SCHEMA: 'schema',
-    MESSAGE: 'message',
-    EDIT: 'edit',
+const MessageType = {
     READY: 'ready',
-    SAVE: 'save',
-};
-
-const InMessageType = {
-    SELECT_SCHEMA: 'select_schema',
-    SELECT_MESSAGE: 'select_message',
-    SHOW_DATAGRID: 'show_datagrid',
+    EDIT: 'edit',
     UNDO: 'undo',
     REDO: 'redo',
     SAVE: 'save',
+    
+    SCHEMA: 'schema',
+    MESSAGE: 'message',
+    DATAGRID: 'datagrid',
 };
 
-export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, OutMessageType, InMessageType, getDefaultValue };
+export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, MessageType, getDefaultValue };

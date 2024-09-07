@@ -1,12 +1,7 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 const vscode = require('vscode')
-const { File } = require('../disorder/file');
-
-const OutMessageType = {
-	UNDO: 'undo',
-	REDO: 'redo',
-	SAVE: 'save',
-};
+const { File } = require('./file');
+const { MessageType } = require('./message');
 
 /**
  * @public
@@ -15,8 +10,8 @@ const OutMessageType = {
  * @property {boolean} disposed
  * @property {vscode.Disposable[]} disposables
  * @property {vscode.EventEmitter<void>} onDidDispose
- * @property {vscode.EventEmitter<{content?: Uint8Array, action: string}>} onDidChangeDocument
- * @property {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>} onDidChange
+ * @property {vscode.EventEmitter<{undo(): void, redo(): void}>} onEdit
+ * @property {vscode.EventEmitter<{content?: Uint8Array, action: string}>} onExecuteAction
  */
 class Document {
 
@@ -48,25 +43,25 @@ class Document {
 		this.register(this.onDidDispose);
 
 		/**
-		 * @type {vscode.EventEmitter<{content?: Uint8Array, action: string}>}
+		 * @type {vscode.EventEmitter<{undo(): void, redo(): void}>}
 		 */
-		this.onDidChangeDocument = new vscode.EventEmitter();
-		this.register(this.onDidChangeDocument);
+		this.onEdit = new vscode.EventEmitter();
+		this.register(this.onEdit);
 
 		/**
-		 * @type {vscode.EventEmitter<{undo(): Promise<void>, redo(): Promise<void>}>}
+		 * @type {vscode.EventEmitter<{content?: Uint8Array, action: string}>}
 		 */
-		this.onDidChange = new vscode.EventEmitter();
-		this.register(this.onDidChange);
+		this.onExecuteAction = new vscode.EventEmitter();
+		this.register(this.onExecuteAction);
 	}
 
 	/**
 	 * @param {vscode.Uri} uri
-	 * @returns {Document}
+	 * @returns {Promise<Document>}
 	 */
-	static create(uri) {
+	static async create(uri) {
 		const document = new Document(uri);
-		document.load();
+		await document.load();
 		return document;
 	}
 
@@ -94,25 +89,25 @@ class Document {
 	}
 
 	edit() {
-		this.onDidChange.fire({
-			undo: async () => {
-				this.onDidChangeDocument.fire({
-					action: OutMessageType.UNDO,
+		this.onEdit.fire({
+			undo: () => {
+				this.onExecuteAction.fire({
+					action: MessageType.UNDO,
 				});
 			},
-			redo: async () => {
-				this.onDidChangeDocument.fire({
-					action: OutMessageType.REDO,
+			redo: () => {
+				this.onExecuteAction.fire({
+					action: MessageType.REDO,
 				});
 			}
 		});
 	}
 
 	/**
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	load() {
-		this.file.read();
+	async load() {
+		await this.file.load();
 	}
 
 	/**
@@ -134,8 +129,8 @@ class Document {
 			return;
 		}
 		this.file.filePath = this.uri.path;
-		this.onDidChangeDocument.fire({
-			action: OutMessageType.SAVE,
+		this.onExecuteAction.fire({
+			action: MessageType.SAVE,
 		});
 	}
 
@@ -147,7 +142,7 @@ class Document {
 		this.load();
 		/* TODO send revert command to webview
 		this.onDidChangeDocument.fire({
-			content: fs.readFileSync(this.uri.fsPath),
+			content: fs.readFileSync(this.uri.path),
 		});*/
 	}
 
@@ -158,6 +153,7 @@ class Document {
 	 */
 	async backup(destination, _cancellationToken) {
 		//backup feature is disabled
+		//TODO: implement backup feature later
 		return {
 			id: destination.toString(),
 			delete: async () => {}

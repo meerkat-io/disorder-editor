@@ -187,7 +187,7 @@ vscode.postMessage({ command: OutMessageType.READY });
         this.edits = this.savedEdits;
 
         this.onDidChangeDocument.fire({
-            content: fs.readFileSync(this.uri.fsPath),
+            content: fs.readFileSync(this.uri.path),
             edits: this.edits,
         });
     }

@@ -3,26 +3,13 @@
 const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
+const { MessageType } = require('./message');
 
 const SchemaStatus = {
 	NONE: 'none',
 	LOAD: 'load',
 	VALID: 'valid',
 	INVALID: 'invalid',
-};
-
-const InMessageType = {
-	SCHEMA: 'schema',
-	MESSAGE: 'message',
-	EDIT: 'edit',
-	READY: 'ready',
-	SAVE: 'save',
-};
-
-const OutMessageType = {
-	SELECT_SCHEMA: 'select_schema',
-	SELECT_MESSAGE: 'select_message',
-	SHOW_DATAGRID: 'show_datagrid',
 };
 
 /**
@@ -78,10 +65,10 @@ class EditorProvider {
 	 * @returns {Promise<Document>}
 	 */
 	async openCustomDocument(uri, _openContext, _token) {
-		const document = Document.create(uri);
+		const document = await Document.create(uri);
 
 		const listeners = [];
-		listeners.push(document.onDidChange.event(e => {
+		listeners.push(document.onEdit.event(e => {
 			this.onDidChange.fire({
 				document: document,
 				undo: e.undo,
@@ -89,8 +76,7 @@ class EditorProvider {
 			});
 		}));
 
-		listeners.push(document.onDidChangeDocument.event(e => {
-			// Update all webviews when the document changes
+		listeners.push(document.onExecuteAction.event(e => {
 			for (const webviewPanel of this.getWebviews(document.uri)) {
 				this.postMessage(webviewPanel, e.action, {});
 			}
@@ -121,7 +107,7 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async saveCustomDocument(document, cancellation) {
-		return document.save(cancellation);
+		document.save(cancellation);
 	}
 
 	/**
@@ -269,51 +255,63 @@ class EditorProvider {
 	onMessage(webviewPanel, document, message) {
 		console.log("receive data in editor:", message)
 		switch (message.command) {
-			case InMessageType.READY:
+			case MessageType.READY:
 				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
 				try {
 					if (document.file.initialized === false) {
-						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.LOAD);
+						this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.LOAD);
 					} else {
-						this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
+						this.postMessage(webviewPanel, MessageType.DATAGRID, {
 							type: document.file.type,
-							value: document.file.content,
+							content: document.file.content,
 						});
 					}
 				} catch (error) {
 					//TODO: show error message
 				}
-				return;
+				break;
 
-			case InMessageType.SCHEMA:
-				try {
-					const messages = document.file.loadSchema(message.body);
-					if (messages.length === 0) {
-						this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.INVALID);
-					} else {
-						this.postMessage(webviewPanel, OutMessageType.SELECT_MESSAGE, messages);
+			case MessageType.SCHEMA:
+				/*
+				(async () => {
+					try {
+						const messages = await document.file.loadSchema(message.body);
+						if (messages.length === 0) {
+							this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);
+						} else {
+							this.postMessage(webviewPanel, MessageType.MESSAGE, messages);
+						}
+					} catch (error) {
+						this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);
 					}
-				} catch (error) {
-					this.postMessage(webviewPanel, OutMessageType.SELECT_SCHEMA, SchemaStatus.INVALID);
-				}
-				return;
+				})();*/
+				document.file.loadSchema(message.body).then(messages => {
+					if (messages.length === 0) {
+						this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);
+					} else {
+						this.postMessage(webviewPanel, MessageType.MESSAGE, messages);
+					}
+				}).catch(_error => {
+					this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);
+				});
+				break;
 
-			case InMessageType.MESSAGE:
+			case MessageType.MESSAGE:
 				document.file.setMessage(message.body.message, message.body.container);
-				document.file.write([]);
-				this.postMessage(webviewPanel, OutMessageType.SHOW_DATAGRID, {
+				document.file.save();
+				this.postMessage(webviewPanel, MessageType.DATAGRID, {
 					type: document.file.type,
 					value: document.file.content,
 				});
 				return;
 
-			case InMessageType.EDIT:
+			case MessageType.EDIT:
 				document.edit();
 				return;
 
-			case InMessageType.SAVE:
-				document.file.write(message.body);
-				console.log("save data in editor:", message.body)
+			case MessageType.SAVE:
+				const uri = vscode.Uri.parse(document.file.filePath);
+				vscode.workspace.fs.writeFile(uri, message.body);
 				return;
 		}
 	}

@@ -1,4 +1,4 @@
-const fs = require('fs');
+const vscode = require('vscode');
 const path = require('path');
 const yaml = require('js-yaml')
 
@@ -140,10 +140,10 @@ class Schema {
 
     /**
      * @param {string} filePath 
-     * @returns {string[]}
+     * @returns {Promise<string[]>}
      */
-    load(filePath) {
-        const messages = this.parse(path.resolve(filePath));
+    async load(filePath) {
+        const messages = await this.parse(path.resolve(filePath));
         this.resovle();
         return messages;
     }
@@ -151,25 +151,27 @@ class Schema {
     /** 
      * @private
      * @param {string} filePath
-     * @returns {YamlFile}
+     * @returns {Promise<YamlFile>}
      */
-    loadYaml(filePath) {
-        return yaml.load(fs.readFileSync(filePath, 'utf8'));
+    async loadYaml(filePath) {
+        const uri = vscode.Uri.parse(filePath);
+        const content = await vscode.workspace.fs.readFile(uri);
+        return yaml.load(new TextDecoder().decode(content));
     }
 
     /**
      * @private
      * @param {string} filePath 
-     * @returns {string[]}
+     * @returns {Promise<string[]>}
      */
-    parse(filePath) {
+    async parse(filePath) {
         console.log(`Loading schema ${filePath}`);
         if (this.processedFiles.has(filePath)) {
             return;
         }
         this.processedFiles.add(filePath);
 
-        const file = this.loadYaml(filePath);
+        const file = await this.loadYaml(filePath);
         if (!file.schema || file.schema !== Schema.SCHEMA_NAME) {
             throw new Error(`Schema ${filePath} is not a ${Schema.SCHEMA_NAME} schema`);
         }
@@ -275,10 +277,10 @@ class Schema {
             }
         }
 
-        const folder = path.dirname(filePath);
         if (file.import) {
+            const folder = path.dirname(filePath);
             for (const importPath of file.import) {
-                this.parse(path.resolve(folder, importPath));
+                await this.parse(path.resolve(folder, importPath));
             }
         }
 

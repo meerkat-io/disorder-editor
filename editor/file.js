@@ -70,8 +70,7 @@ class File {
 
         this.schemaPath = this.readHeader(headers, HeaderName.SCHEMA);
         const absSchemaPath = path.join(path.dirname(this.filePath), this.schemaPath);
-        this.schema.load(absSchemaPath);
-
+        await this.schema.load(absSchemaPath);
         this.setMessage(this.readHeader(headers, HeaderName.MESSAGE), this.readHeader(headers, HeaderName.CONTAINER));
     }
 

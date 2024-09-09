@@ -5,6 +5,7 @@ import Schema from './components/Schema.vue'
 import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
 import { MessageType, Edit, Operation, OperationType } from './shared'
+import { Binary } from './binary'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
@@ -13,6 +14,7 @@ const schema = ref('');
 const messages = ref([]);
 const type = ref();
 const value = ref([]);
+const binary = new Binary();
 
 const view = ref(0);
 
@@ -53,10 +55,12 @@ function receiveMessage(message) {
             break;
 
         case MessageType.DATAGRID:
-            console.log(message.body);
             view.value = View.DATA;
             type.value = message.body.type;
-            console.log("content:", message.body.content);
+            binary.read(new Uint8Array(message.body.content.data));
+            value.value = binary.read(message.body.content);
+            console.log("headers:", binary.headers);
+            console.log("value:", value.value);
             break;
 
         case MessageType.UNDO:
@@ -204,5 +208,5 @@ vscode.postMessage({ command: MessageType.READY });
     <message v-if="view === View.MESSAGE"
         @select="(message) => vscode.postMessage({ command: MessageType.MESSAGE, body: message })"
         :messages="messages" />
-    <!-- <cell v-else-if="view === View.DATA" :type="type" v-model="value" :path="''" @edit="handleEdit" />-->
+    <cell v-else-if="view === View.DATA" :type="type" v-model="value" :path="''" @edit="handleEdit" />
 </template>

@@ -1,4 +1,4 @@
-import { Type, isEmptyValue } from '../shared.js';
+import { Type, isEmptyValue } from './shared.js';
 
 /**
  * Tag is used in disorder binary stream 
@@ -607,4 +607,42 @@ class Writer {
     }
 }
 
-module.exports = { ByteArray, Reader, Writer }
+/**
+ * @property {[]} headers
+ */ 
+class Binary {
+    static HEADER_TYPE = new Type('map[string]');
+
+    constructor() {
+        /**
+         * @type {[]}
+         */
+        this.headers = [];
+    }
+
+    //TODO update schema file path //SCHEMA: "schema",
+
+    /**
+     * @param {Uint8Array} content
+     * @returns {any}
+     */ 
+    read(content) {
+        const reader = new Reader(new ByteArray(content));
+        this.headers = reader.read();
+        return reader.read();
+    }
+
+    /**
+     * @param {any} value
+     * @param {Type} type
+     * @returns {Uint8Array}
+     */
+    write(value, type) {
+        const writer = new Writer();
+        writer.write(this.headers, Binary.HEADER_TYPE);
+        writer.write(value, type);
+        return writer.bytes.buffer;
+    }
+}
+
+export { Binary };

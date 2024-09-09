@@ -257,34 +257,17 @@ class EditorProvider {
 		switch (message.command) {
 			case MessageType.READY:
 				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
-				try {
-					if (document.file.initialized === false) {
-						this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.LOAD);
-					} else {
-						this.postMessage(webviewPanel, MessageType.DATAGRID, {
-							type: document.file.type,
-							content: document.file.content,
-						});
-					}
-				} catch (error) {
-					//TODO: show error message
+				if (document.file.initialized === false) {
+					this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.LOAD);
+				} else {
+					this.postMessage(webviewPanel, MessageType.DATAGRID, {
+						type: document.file.type,
+						content: document.file.content,
+					});
 				}
 				break;
 
 			case MessageType.SCHEMA:
-				/*
-				(async () => {
-					try {
-						const messages = await document.file.loadSchema(message.body);
-						if (messages.length === 0) {
-							this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);
-						} else {
-							this.postMessage(webviewPanel, MessageType.MESSAGE, messages);
-						}
-					} catch (error) {
-						this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);
-					}
-				})();*/
 				document.file.loadSchema(message.body).then(messages => {
 					if (messages.length === 0) {
 						this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.INVALID);

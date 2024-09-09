@@ -1,4 +1,4 @@
-const { Type } = require('./schema');
+import { Type, isEmptyValue } from '../shared.js';
 
 /**
  * Tag is used in disorder binary stream 
@@ -526,7 +526,6 @@ class Writer {
                 break;
 
             case Type.TIMESTAMP:
-                //TODO check null
                 if (!(value instanceof Date)) {
                     throw new Error(`value ${value} is not a timestamp (Date)`);
                 }
@@ -554,24 +553,27 @@ class Writer {
                 break;
 
             case Type.MAP:
-                //TODO validate keys (not empty, not null, no duplicate)
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }
                 for (const pair of value) {
-                    this.write(pair.value, type.reference, pair.key);
+                    const key = pair.key.trim();
+                    if (key.length !== 0) {
+                        this.write(pair.value, type.reference, pair.key);
+                    }
                 }
                 this.writeTag(Tag.ObjectEnd);
                 break;
 
             case Type.STRUCT:
-                //TODO skip null fields
-                //TODO skip empty array & map
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }
                 for (const pair of value) {
                     if (type.fields.hasOwnProperty(pair.key)) {
+                        if (!isEmptyValue(type.fields[pair.key].type, pair.value)) {
+                            continue;
+                        }
                         this.write(pair.value, type.fields[pair.key], pair.key);
                     }
                 }

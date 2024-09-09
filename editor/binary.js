@@ -526,7 +526,6 @@ class Writer {
                 break;
 
             case Type.TIMESTAMP:
-                //TODO check null
                 if (!(value instanceof Date)) {
                     throw new Error(`value ${value} is not a timestamp (Date)`);
                 }
@@ -554,24 +553,27 @@ class Writer {
                 break;
 
             case Type.MAP:
-                //TODO validate keys (not empty, not null, no duplicate)
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }
                 for (const pair of value) {
-                    this.write(pair.value, type.reference, pair.key);
+                    const key = pair.key.trim();
+                    if (key.length !== 0) {
+                        this.write(pair.value, type.reference, pair.key);
+                    }
                 }
                 this.writeTag(Tag.ObjectEnd);
                 break;
 
             case Type.STRUCT:
-                //TODO skip null fields
-                //TODO skip empty array & map
                 if (!(value instanceof Array)) {
                     throw new Error(`value ${value} is not a array`);
                 }
                 for (const pair of value) {
                     if (type.fields.hasOwnProperty(pair.key)) {
+                        if (!this.isEmptyValue(type.fields[pair.key].type, pair.value)) {
+                            continue;
+                        }
                         this.write(pair.value, type.fields[pair.key], pair.key);
                     }
                 }
@@ -602,6 +604,35 @@ class Writer {
      */
     writeTag(tag) {
         this.bytes.writeByte(tag);
+    }
+
+    /**
+     * @param {string} type
+     * @param {any} value
+     * @returns {boolean}
+     */
+    isEmptyValue(type, value) {
+        switch (type) {
+            case Type.BOOL:
+                return value === false;
+            case Type.INT:
+            case Type.LONG:
+            case Type.FLOAT:
+            case Type.DOUBLE:
+                return value === 0;
+            case Type.TIMESTAMP:
+            case Type.BYTES:
+                return value === null;
+            case Type.STRING:
+            case Type.ENUM:
+                return value ==='';
+            case Type.ARRAY:
+            case Type.MAP:
+            case Type.STRUCT:
+                return value.length === 0;
+            default:
+                throw new Error(`Unknown type: ${type}`);
+        }
     }
 }
 

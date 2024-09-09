@@ -11,7 +11,9 @@ const vscode = acquireVsCodeApi();
 
 const schema = ref('');
 const messages = ref([]);
-const datagrid = ref();
+const type = ref();
+const value = ref([]);
+
 const view = ref(0);
 
 /**
@@ -51,10 +53,10 @@ function receiveMessage(message) {
             break;
 
         case MessageType.DATAGRID:
-            console.log('show datagrid');
             console.log(message.body);
             view.value = View.DATA;
-            datagrid.value = message.body;
+            type.value = message.body.type;
+            console.log("content:", message.body.content);
             break;
 
         case MessageType.UNDO:
@@ -75,7 +77,8 @@ function receiveMessage(message) {
             console.log('save');
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);
-            vscode.postMessage({ command: MessageType.SAVE, body: [...datagrid.value.value] });
+            //TODO: encode content
+            vscode.postMessage({ command: MessageType.SAVE, body: null });
             break;
 
         //SaveAs? not save edits
@@ -112,23 +115,23 @@ function executeOperation(operation) {
 
 /**
  * @param {string} path
- * @param {any} value
+ * @param {any} v
  */
-function setValue(path, value) {
-    let obj = datagrid.value.value;
+function setValue(path, v) {
+    let obj = value.value;
     const parts = path.split('.');
     const lastPart = parts[parts.length - 1];
     for (let i = 0; i < parts.length - 1; i++) {
         obj = obj[parts[i]];
     }
-    obj[lastPart] = value;
+    obj[lastPart] = v;
 }
 
 /**
  * @param {string} path
  */
 function getArray(path) {
-    let obj = datagrid.value.value;
+    let obj = value.value;
     if (path !== '') {
         const parts = path.split('.');
         for (let i = 0; i < parts.length; i++) {
@@ -201,5 +204,5 @@ vscode.postMessage({ command: MessageType.READY });
     <message v-if="view === View.MESSAGE"
         @select="(message) => vscode.postMessage({ command: MessageType.MESSAGE, body: message })"
         :messages="messages" />
-    <cell v-else-if="view === View.DATA" :type="datagrid.type" v-model="datagrid.value" :path="''" @edit="handleEdit" />
+    <!-- <cell v-else-if="view === View.DATA" :type="type" v-model="value" :path="''" @edit="handleEdit" />-->
 </template>

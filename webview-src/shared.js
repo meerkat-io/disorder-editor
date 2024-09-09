@@ -31,6 +31,18 @@ class Type {
          * @type {string}
          */
         this.type = type;
+        /**
+         * @type {Type}
+         */
+        this.reference = undefined;
+        /**
+         * @type {Object}
+         */
+        this.fields = undefined;
+        /**
+         * @type {string[]}
+         */
+        this.enums = undefined;
     }
 }
 
@@ -104,6 +116,35 @@ function getDefaultValue(type) {
     }
 }
 
+/**
+ * @param {string} type
+ * @param {any} value
+ * @returns {boolean}
+ */
+function isEmptyValue(type, value) {
+    switch (type) {
+        case Type.BOOL:
+            return value === false;
+        case Type.INT:
+        case Type.LONG:
+        case Type.FLOAT:
+        case Type.DOUBLE:
+            return value === 0;
+        case Type.TIMESTAMP:
+        case Type.BYTES:
+            return value === null;
+        case Type.STRING:
+        case Type.ENUM:
+            return value ==='';
+        case Type.ARRAY:
+        case Type.MAP:
+        case Type.STRUCT:
+            return value.length === 0;
+        default:
+            throw new Error(`Unknown type: ${type}`);
+    }
+}
+
 const Container = {
     NONE: 'none',
     ARRAY: 'array',
@@ -129,10 +170,10 @@ const MessageType = {
     UNDO: 'undo',
     REDO: 'redo',
     SAVE: 'save',
-    
+
     SCHEMA: 'schema',
     MESSAGE: 'message',
     DATAGRID: 'datagrid',
 };
 
-export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, MessageType, getDefaultValue };
+export { Type, Edit, Operation, OperationType, Container, SchemaStatus, ContextMenuAction, MessageType, getDefaultValue, isEmptyValue };

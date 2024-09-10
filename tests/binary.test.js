@@ -120,6 +120,8 @@ test('bytearray should resize automatically', () => {
 test('read and write primary types', () => {
     const writer = new Writer();
     const time = new Date().getTime();
+    const date = new Date(time).toISOString();
+    const trimmedTime = date.substring(0, date.indexOf('Z'));
     writer.write(true, new Type(Type.BOOL));
     writer.write(-123, new Type(Type.INT));
     writer.write(-123456789n, new Type(Type.LONG));
@@ -127,7 +129,7 @@ test('read and write primary types', () => {
     writer.write(3.25, new Type(Type.DOUBLE));
     writer.write(new Uint8Array([1, 2, 3]), new Type(Type.BYTES));
     writer.write('hello world', new Type(Type.STRING));
-    writer.write(new Date(time), new Type(Type.TIMESTAMP));
+    writer.write(trimmedTime, new Type(Type.TIMESTAMP));
     const reader = new Reader(writer.bytes);
 
     expect(reader.read()).toBe(true);
@@ -137,7 +139,7 @@ test('read and write primary types', () => {
     expect(reader.read()).toBe(3.25);
     expect(reader.read()).toEqual(new Uint8Array([1, 2, 3]));
     expect(reader.read()).toBe('hello world');
-    expect(reader.read()).toEqual(new Date(time));
+    expect(reader.read()).toEqual(trimmedTime);
 });
 
 test('read and write enum', () => {

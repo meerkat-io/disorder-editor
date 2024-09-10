@@ -405,7 +405,8 @@ class Reader {
 
             case Tag.Timestamp:
                 const milliseconds = this.bytes.readLong();
-                return new Date(Number(milliseconds));
+                const time = new Date(Number(milliseconds)).toISOString();
+                return time.substring(0, time.indexOf('Z'));
 
             case Tag.Enum:
                 return this.readName();
@@ -533,10 +534,10 @@ class Writer {
                 break;
 
             case Type.TIMESTAMP:
-                if (!(value instanceof Date)) {
-                    throw new Error(`value ${value} is not a timestamp (Date)`);
+                if (typeof value !== 'string') {
+                    throw new Error(`value ${value} is not a timestamp (ISO string)`);
                 }
-                this.bytes.writeLong(BigInt(value.getTime()));
+                this.bytes.writeLong(BigInt(new Date(value + "Z").getTime()));
                 break;
 
             case Type.ENUM:
@@ -627,12 +628,12 @@ class Writer {
             case Type.FLOAT:
             case Type.DOUBLE:
                 return value === 0;
-            case Type.TIMESTAMP:
             case Type.BYTES:
                 return value === null;
+            case Type.TIMESTAMP:
             case Type.STRING:
             case Type.ENUM:
-                return value ==='';
+                return value === '';
             case Type.ARRAY:
             case Type.MAP:
             case Type.STRUCT:

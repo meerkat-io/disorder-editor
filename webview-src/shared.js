@@ -101,9 +101,9 @@ function getDefaultValue(type) {
         case Type.FLOAT:
         case Type.DOUBLE:
             return 0;
-        case Type.TIMESTAMP:
         case Type.BYTES:
             return null;
+        case Type.TIMESTAMP:
         case Type.STRING:
         case Type.ENUM:
             return '';
@@ -130,9 +130,9 @@ function isEmptyValue(type, value) {
         case Type.FLOAT:
         case Type.DOUBLE:
             return value === 0;
-        case Type.TIMESTAMP:
         case Type.BYTES:
             return value === null;
+        case Type.TIMESTAMP:
         case Type.STRING:
         case Type.ENUM:
             return value ==='';

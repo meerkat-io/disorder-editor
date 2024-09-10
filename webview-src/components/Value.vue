@@ -18,7 +18,7 @@ const value = defineModel({
 });
 const upload = ref();
 
-//TODO fix time, bytes encoding
+//TODO bytes encoding
 
 /**
  * @param {any} oldValue 

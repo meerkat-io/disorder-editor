@@ -30,6 +30,10 @@ const savedEdits = [];
  * @type {Edit[]}
  */
 const redoEdits = [];
+/**
+ * @type {boolean}
+ */
+let dirty = false;
 
 const View = {
     NONE: 0,
@@ -78,6 +82,7 @@ function receiveMessage(message) {
 
         case MessageType.SAVE:
             console.log('save');
+            dirty = false;
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);
             const content = binary.write(value.value, type.value);
@@ -85,7 +90,6 @@ function receiveMessage(message) {
             break;
 
         //SaveAs? not save edits //revert, backup
-        //Fix save & merge edits issue
     }
 }
 
@@ -150,7 +154,7 @@ function getArray(path) {
  */
 function handleEdit(edit) {
     let merged = false;
-    if (edits.length > 0) {
+    if (edits.length > 0 && dirty) {
         const lastEdit = edits[edits.length - 1];
         if (lastEdit.undo.path === edit.undo.path
             && lastEdit.undo.type === OperationType.UPDATE
@@ -163,6 +167,7 @@ function handleEdit(edit) {
         redoEdits.splice(0, redoEdits.length);
     }
     if (!merged) {
+        dirty = true;
         edits.push(edit);
         vscode.postMessage({ command: MessageType.EDIT });
     }

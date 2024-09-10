@@ -16,6 +16,9 @@ function action(action) {
     visible.value = false;
 }
 
+/**
+ * @param {MouseEvent} event
+ */
 function delectClickOutside(event) {
     if (!contextMenu.value.contains(event.target)) {
         visible.value = false;

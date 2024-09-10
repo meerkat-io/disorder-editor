@@ -1,38 +1,29 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-
-import Schema from './components/Schema.vue'
-import Message from './components/Message.vue'
 import Cell from './components/Cell.vue'
-import { MessageType, Edit, Operation, OperationType } from './shared'
+import { MessageType, SchemaStatus, Container, Edit, Operation, OperationType } from './shared'
 import { Binary } from './binary'
 
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-const schema = ref('');
+const schemaStatus = ref('');
+const uploadSchema = ref();
+
 const messages = ref([]);
+const messageType = ref('');
+const containerType = ref('');
+const submitMessageDisabled = ref(false);
+
+const binary = new Binary();
 const type = ref();
 const value = ref([]);
-const binary = new Binary();
 
 const view = ref(0);
 
-/**
- * @type {Edit[]}
- */
 const edits = [];
-/**
- * @type {Edit[]}
- */
 const savedEdits = [];
-/**
- * @type {Edit[]}
- */
 const redoEdits = [];
-/**
- * @type {boolean}
- */
 let dirty = false;
 
 const View = {
@@ -46,11 +37,14 @@ onMounted(() => {
     window.addEventListener('message', (event) => receiveMessage(event.data));
 })
 
+/**
+ * @param {Object} message 
+ */
 function receiveMessage(message) {
     switch (message.command) {
         case MessageType.SCHEMA:
             view.value = View.SCHEMA;
-            schema.value = message.body;
+            schemaStatus.value = message.body;
             break;
 
         case MessageType.MESSAGE:
@@ -168,6 +162,27 @@ function handleEdit(edit) {
     }
 }
 
+/**
+ * @param {Object} event 
+ */
+function onSelectSchema(event) {
+    const file = event.target.files[0];
+    if (file === null) {
+        return;
+    }
+    vscode.postMessage({ command: MessageType.SCHEMA, body: file.path })
+}
+
+function onSelectMessage() {
+    if (messageType.value === '' || containerType.value === '') {
+        return;
+    }
+    submitMessageDisabled.value = true;
+    vscode.postMessage({ command: MessageType.MESSAGE, body: { message: messageType.value, container: containerType.value } })
+}
+
+//TODO: tab to add row
+
 vscode.postMessage({ command: MessageType.READY });
 /**
  * 
@@ -202,11 +217,25 @@ vscode.postMessage({ command: MessageType.READY });
 </script>
 
 <template>
-    <schema v-if="view === View.SCHEMA"
-        @select="(schemaPath) => vscode.postMessage({ command: MessageType.SCHEMA, body: schemaPath })"
-        :status="schema" />
-    <message v-if="view === View.MESSAGE"
-        @select="(message) => vscode.postMessage({ command: MessageType.MESSAGE, body: message })"
-        :messages="messages" />
+    <div v-if="view === View.SCHEMA">
+        <input type='file' ref="uploadSchema" style="display:none" accept=".yaml, .yml" @change="onSelectSchema" />
+        <button @click="uploadSchema.click()" :disabled="schemaStatus === SchemaStatus.VALID">load schema</button>
+        <br>
+        <br>
+        <label v-if="schemaStatus === SchemaStatus.INVALID">Schema file is invalid or corrupt, select another
+            one.</label>
+    </div>
+    <div v-if="view === View.MESSAGE">
+        <select v-model="messageType" :style="{ width: '155px' }">
+            <option disabled value="">select message type</option>
+            <option v-for="message in messages">{{ message }}</option>
+        </select>
+        <select v-model="containerType" :style="{ width: '155px', marginLeft: '10px' }">
+            <option disabled value="">select container type</option>
+            <option v-for=" value in Container" :value="value">{{ value }}</option>
+        </select>
+        <button :disabled="submitMessageDisabled" :style="{ width: '60px', marginLeft: '10px' }"
+            @click="onSelectMessage">select</button>
+    </div>
     <cell v-else-if="view === View.DATA" :type="type" v-model="value" :path="''" @edit="handleEdit" />
 </template>

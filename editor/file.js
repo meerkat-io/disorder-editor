@@ -111,10 +111,10 @@ class File {
         if (this.container === ContainerType.NONE) {
             this.type = type;
         } else if (this.container === "array") {
-            this.type = new Type("array[]");
+            this.type = new Type("array[" + this.message + "]");
             this.type.reference = type;
         } else if (this.container === "map") {
-            this.type = new Type("map[]");
+            this.type = new Type("map[" + this.message + "]");
             this.type.reference = type;
         }
 

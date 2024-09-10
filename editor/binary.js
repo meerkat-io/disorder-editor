@@ -330,8 +330,14 @@ class ByteArray {
      * @private
      */
     checkWriteCapacity(contentLength) {
-        if (this.writeOffset + contentLength > this.buffer.length) {
-            const buffer = new Uint8Array(this.buffer.length * 2);
+        let newSize = this.buffer.length;
+        let resize = false;
+        while (this.writeOffset + contentLength > newSize) {
+            newSize *= 2;
+            resize = true;
+        }
+        if (resize) {
+            const buffer = new Uint8Array(newSize);
             buffer.set(this.buffer);
             this.buffer = buffer;
         }

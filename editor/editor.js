@@ -253,7 +253,6 @@ class EditorProvider {
 	 * @private
 	 */
 	onMessage(webviewPanel, document, message) {
-		console.log("receive data in editor:", message)
 		switch (message.command) {
 			case MessageType.READY:
 				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
@@ -293,7 +292,6 @@ class EditorProvider {
 				return;
 
 			case MessageType.SAVE:
-				console.log("save content:", message.body)
 				const uri = vscode.Uri.parse(document.file.filePath);
 				vscode.workspace.fs.writeFile(uri, message.body);
 				return;

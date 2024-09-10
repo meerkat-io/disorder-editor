@@ -18,8 +18,6 @@ const value = defineModel({
 });
 const upload = ref();
 
-//TODO bytes encoding
-
 /**
  * @param {any} oldValue 
  * @param {any} newValue 
@@ -41,7 +39,7 @@ function load(event) {
 }
 
 function onload(event) {
-    var array = new Int8Array(event.target.result);
+    var array = new Uint8Array(event.target.result);
     value.value = array;
 }
 </script>

@@ -62,26 +62,21 @@ function receiveMessage(message) {
             view.value = View.DATA;
             type.value = message.body.type;
             value.value = binary.read(new Uint8Array(message.body.content.data));
-            console.log("headers:", binary.headers);
-            console.log("value:", value.value);
             break;
 
         case MessageType.UNDO:
-            console.log('undo');
             const undo = edits.pop();
             redoEdits.push(undo);
             executeOperation(undo.undo);
             break;
 
         case MessageType.REDO:
-            console.log('redo');
             const redo = redoEdits.pop();
             edits.push(redo);
             executeOperation(redo.redo);
             break;
 
         case MessageType.SAVE:
-            console.log('save');
             dirty = false;
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);

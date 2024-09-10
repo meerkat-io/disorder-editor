@@ -165,7 +165,6 @@ class Schema {
      * @returns {Promise<string[]>}
      */
     async parse(filePath) {
-        console.log(`Loading schema ${filePath}`);
         if (this.processedFiles.has(filePath)) {
             return;
         }

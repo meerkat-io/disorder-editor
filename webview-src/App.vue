@@ -85,6 +85,7 @@ function receiveMessage(message) {
             break;
 
         //SaveAs? not save edits //revert, backup
+        //Fix save & merge edits issue
     }
 }
 

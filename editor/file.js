@@ -61,7 +61,7 @@ class File {
      */
     async load() {
         const uri = vscode.Uri.parse(this.filePath);
-        this.content = await vscode.workspace.fs.readFile(uri);
+        this.content = new Uint8Array(await vscode.workspace.fs.readFile(uri));
         if (this.content.length === 0) {
             return;
         }

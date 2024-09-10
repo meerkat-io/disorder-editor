@@ -283,7 +283,7 @@ class EditorProvider {
 				document.file.save();
 				this.postMessage(webviewPanel, MessageType.DATAGRID, {
 					type: document.file.type,
-					value: document.file.content,
+					content: document.file.content,
 				});
 				return;
 

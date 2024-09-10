@@ -55,7 +55,7 @@ function receiveMessage(message) {
         case MessageType.DATAGRID:
             view.value = View.DATA;
             type.value = message.body.type;
-            value.value = binary.read(new Uint8Array(message.body.content.data));
+            value.value = binary.read(new Uint8Array(message.body.content));
             break;
 
         case MessageType.UNDO:

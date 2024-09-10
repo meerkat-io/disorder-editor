@@ -25,6 +25,7 @@ class File {
          * @type {string}
          */
         this.filePath = filePath;
+        //TODO: backup path
         /**
          * @type {string}
          */

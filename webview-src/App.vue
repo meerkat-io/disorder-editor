@@ -81,11 +81,11 @@ function receiveMessage(message) {
             console.log('save');
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);
-            //TODO: encode content
-            vscode.postMessage({ command: MessageType.SAVE, body: null });
+            const content = binary.write(value.value, type.value);
+            vscode.postMessage({ command: MessageType.SAVE, body: content });
             break;
 
-        //SaveAs? not save edits
+        //SaveAs? not save edits //revert, backup
     }
 }
 

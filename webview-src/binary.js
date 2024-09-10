@@ -608,19 +608,23 @@ class Writer {
 }
 
 /**
+ * @property {Type} headerType
  * @property {[]} headers
  */ 
 class Binary {
-    static HEADER_TYPE = new Type('map[string]');
-
     constructor() {
         /**
          * @type {[]}
          */
         this.headers = [];
+        /**
+         * @type {Type}
+         */
+        this.headerType = new Type('map');
+        this.headerType.reference = new Type('string');
     }
 
-    //TODO update schema file path //SCHEMA: "schema",
+    //TODO update schema file path (save as) //SCHEMA: "schema",
 
     /**
      * @param {Uint8Array} content
@@ -639,7 +643,7 @@ class Binary {
      */
     write(value, type) {
         const writer = new Writer();
-        writer.write(this.headers, Binary.HEADER_TYPE);
+        writer.write(this.headers, this.headerType);
         writer.write(value, type);
         return writer.bytes.buffer;
     }

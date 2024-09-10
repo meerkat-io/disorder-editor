@@ -293,6 +293,7 @@ class EditorProvider {
 				return;
 
 			case MessageType.SAVE:
+				console.log("save content:", message.body)
 				const uri = vscode.Uri.parse(document.file.filePath);
 				vscode.workspace.fs.writeFile(uri, message.body);
 				return;

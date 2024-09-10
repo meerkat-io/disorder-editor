@@ -13,7 +13,7 @@ const uploadSchema = ref();
 const messages = ref([]);
 const messageType = ref('');
 const containerType = ref('');
-const submitMessageDisabled = ref(false);
+const setMessageDisabled = ref(false);
 
 const binary = new Binary();
 const type = ref();
@@ -177,7 +177,7 @@ function onSelectMessage() {
     if (messageType.value === '' || containerType.value === '') {
         return;
     }
-    submitMessageDisabled.value = true;
+    setMessageDisabled.value = true;
     vscode.postMessage({ command: MessageType.MESSAGE, body: { message: messageType.value, container: containerType.value } })
 }
 
@@ -234,7 +234,7 @@ vscode.postMessage({ command: MessageType.READY });
             <option disabled value="">select container type</option>
             <option v-for=" value in Container" :value="value">{{ value }}</option>
         </select>
-        <button :disabled="submitMessageDisabled" :style="{ width: '60px', marginLeft: '10px' }"
+        <button :disabled="setMessageDisabled" :style="{ width: '60px', marginLeft: '10px' }"
             @click="onSelectMessage">select</button>
     </div>
     <cell v-else-if="view === View.DATA" :type="type" v-model="value" :path="''" @edit="handleEdit" />

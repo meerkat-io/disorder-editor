@@ -57,8 +57,7 @@ function receiveMessage(message) {
         case MessageType.DATAGRID:
             view.value = View.DATA;
             type.value = message.body.type;
-            binary.read(new Uint8Array(message.body.content.data));
-            value.value = binary.read(message.body.content);
+            value.value = binary.read(new Uint8Array(message.body.content.data));
             console.log("headers:", binary.headers);
             console.log("value:", value.value);
             break;

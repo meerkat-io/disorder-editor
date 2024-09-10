@@ -84,9 +84,9 @@ class File {
         const writer = new Writer();
         writer.write(header, File.HEADER_TYPE);
         writer.write([], this.type);
-        this.content = writer.bytes.buffer;
+        this.content = writer.bytes.getBytes();
         const uri = vscode.Uri.parse(this.filePath);
-        await vscode.workspace.fs.writeFile(uri, writer.bytes.buffer);
+        await vscode.workspace.fs.writeFile(uri, this.content);
     }
 
     /**

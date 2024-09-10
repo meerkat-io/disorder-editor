@@ -107,6 +107,13 @@ class ByteArray {
     }
 
     /**
+     * @returns {Uint8Array}
+     */
+    getBytes() {
+        return this.buffer.subarray(0, this.writeOffset);
+    }
+
+    /**
      * @returns {boolean}
      */
     readBoolean() {
@@ -309,8 +316,8 @@ class ByteArray {
     }
 
     /**
-     * @private
      * @param {number} contentLength 
+     * @private
      */
     checkReadOffset(contentLength) {
         if (this.readOffset + contentLength > this.buffer.length) {
@@ -319,8 +326,8 @@ class ByteArray {
     }
 
     /**
-     * @private
      * @param {number} contentLength 
+     * @private
      */
     checkWriteCapacity(contentLength) {
         if (this.writeOffset + contentLength > this.buffer.length) {
@@ -571,7 +578,7 @@ class Writer {
                 }
                 for (const pair of value) {
                     if (type.fields.hasOwnProperty(pair.key)) {
-                        if (!isEmptyValue(type.fields[pair.key].type, pair.value)) {
+                        if (isEmptyValue(type.fields[pair.key].type, pair.value)) {
                             continue;
                         }
                         this.write(pair.value, type.fields[pair.key], pair.key);
@@ -645,7 +652,7 @@ class Binary {
         const writer = new Writer();
         writer.write(this.headers, this.headerType);
         writer.write(value, type);
-        return writer.bytes.buffer;
+        return writer.bytes.getBytes();
     }
 }
 

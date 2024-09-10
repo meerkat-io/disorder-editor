@@ -90,8 +90,8 @@ function handleEdit(edit) {
     <table v-if="expanded">
         <table-header :headers="headers" @contextmenu.prevent="showContextMenu($event, -1)" />
         <tbody>
-            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
-                <td>
+            <tr v-for="(item, index) in value" :key="index">
+                <td @contextmenu.prevent="showContextMenu($event, index)">
                     <key v-model="item.key" :path="props.path + index + '.key'"
                         @edit="handleEdit" />
                 </td>

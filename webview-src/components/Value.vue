@@ -18,6 +18,10 @@ const value = defineModel({
 });
 const upload = ref();
 
+//TODO fix time, bytes encoding
+//TODO fix nested right click (add right click to key/index cell)
+//TODO check obj array
+
 /**
  * @param {any} oldValue 
  * @param {any} newValue 

@@ -140,8 +140,8 @@ onMounted(() => {
             </tr>
         </tbody>
         <tbody v-if="props.type.reference.type !== Type.STRUCT">
-            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
-                <td>
+            <tr v-for="(item, index) in value" :key="index">
+                <td @contextmenu.prevent="showContextMenu($event, index)">
                     {{ index }}
                 </td>
                 <td>

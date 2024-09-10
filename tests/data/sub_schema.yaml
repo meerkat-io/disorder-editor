@@ -7,3 +7,4 @@ package: test
 messages:
   sub:
     value: int
+    description: string

@@ -68,12 +68,12 @@ class EditorProvider {
 	//#region CustomEditorProvider
 	/**
 	 * @param {vscode.Uri} uri 
-	 * @param {{backupId?: string}} _openContext 
+	 * @param {{backupId?: string}} openContext 
 	 * @param {vscode.CancellationToken} _token 
 	 * @returns {Promise<Document>}
 	 */
-	async openCustomDocument(uri, _openContext, _token) {
-		const document = await Document.create(uri);
+	async openCustomDocument(uri, openContext, _token) {
+		const document = await Document.create(uri, openContext.backupId);
 		document.onEdit.event(e => {
 			this.onDidChange.fire({
 				document: document,
@@ -110,7 +110,7 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async saveCustomDocument(document, cancellation) {
-		return this.saveCustomDocumentAs(document, document.uri, cancellation);
+		await this.doSave(document, document.uri, cancellation, false);
 	}
 
 	/**
@@ -120,13 +120,7 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async saveCustomDocumentAs(document, destination, cancellation) {
-		if (cancellation.isCancellationRequested) {
-			return;
-		}
-		const saveId = this.saveId++;
-		const promise = new Promise(resolve => this.onSave.set(saveId, resolve));
-		document.save(destination, saveId);
-		return promise;
+		await this.doSave(document, destination, cancellation, true);
 	}
 
 	/**
@@ -138,7 +132,7 @@ class EditorProvider {
 		if (cancellation.isCancellationRequested) {
 			return;
 		}
-		await document.load();
+		await document.load(undefined);
 		for (const webviewPanel of this.getWebviews(document.uri)) {
 			this.postMessage(webviewPanel, MessageType.REVERT, {
 				content: document.file.content,
@@ -153,7 +147,36 @@ class EditorProvider {
 	 * @returns {Promise<vscode.CustomDocumentBackup>}
 	 */
 	async backupCustomDocument(document, context, cancellation) {
-		return document.backup(context.destination, cancellation);
+		const destination = context.destination;
+		await this.doSave(document, destination, cancellation, false);
+
+		return {
+			id: destination.toString(),
+			delete: async () => {
+				try {
+					await vscode.workspace.fs.delete(destination);
+				} catch {
+					// noop
+				}
+			}
+		};
+	}
+
+	/**
+	 * 
+	 * @param {Document} document 
+	 * @param {vscode.Uri} destination
+	 * @param {vscode.CancellationToken} cancellation 
+	 * @param {boolean} updateSchemaPath 
+	 */
+	async doSave(document, destination, cancellation, updateSchemaPath) {
+		if (cancellation.isCancellationRequested) {
+			return;
+		}
+		const saveId = this.saveId++;
+		const promise = new Promise(resolve => this.onSave.set(saveId, resolve));
+		document.save(destination, saveId, updateSchemaPath);
+		await promise;
 	}
 	//#endregion
 

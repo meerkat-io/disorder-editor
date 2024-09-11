@@ -52,11 +52,12 @@ class Document {
 
 	/**
 	 * @param {vscode.Uri} uri
+	 * @param {string | undefined} backupId
 	 * @returns {Promise<Document>}
 	 */
-	static async create(uri) {
+	static async create(uri, backupId) {
 		const document = new Document(uri);
-		await document.load();
+		await document.load(backupId);
 		return document;
 	}
 
@@ -100,20 +101,22 @@ class Document {
 	}
 
 	/**
+	 * @param {string | undefined} backupId
 	 * @returns {Promise<void>}
 	 */
-	async load() {
-		await this.file.load();
+	async load(backupId) {
+		await this.file.load(backupId);
 	}
 
 	/**
 	 * @param {vscode.Uri} targetResource
 	 * @param {number} saveId
+	 * @param {boolean} updateSchemaPath
 	 * @returns {Promise<void>}
 	 */
-	async save(targetResource, saveId) {
+	async save(targetResource, saveId, updateSchemaPath) {
 		let schemaPath = this.file.schemaPath;
-		if (this.uri.path !== targetResource.path) {
+		if (updateSchemaPath) {
 			const absSchemaPath = path.join(path.dirname(this.file.filePath), this.file.schemaPath);
 			schemaPath = path.relative(path.dirname(targetResource.path), absSchemaPath)
 		}
@@ -121,20 +124,6 @@ class Document {
 			action: MessageType.SAVE,
 			body: { schema: schemaPath, id: saveId, file: targetResource.path },
 		});
-	}
-
-	/**
-	 * @param {vscode.Uri} destination
-	 * @param {vscode.CancellationToken} _cancellationToken
-	 * @returns {Promise<vscode.CustomDocumentBackup>}
-	 */
-	async backup(destination, _cancellationToken) {
-		//backup feature is disabled
-		//TODO: implement backup feature later
-		return {
-			id: destination.toString(),
-			delete: async () => { }
-		};
 	}
 }
 

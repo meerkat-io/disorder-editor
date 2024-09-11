@@ -56,10 +56,11 @@ class File {
     }
 
     /**
+	 * @param {string | undefined} backupId
      * @returns {Promise<void>}
      */
-    async load() {
-        const uri = vscode.Uri.parse(this.filePath);
+    async load(backupId) {
+        const uri = vscode.Uri.parse(backupId ? backupId : this.filePath);
         this.content = new Uint8Array(await vscode.workspace.fs.readFile(uri));
         if (this.content.length === 0) {
             return;

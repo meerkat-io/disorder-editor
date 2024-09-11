@@ -74,17 +74,14 @@ function receiveMessage(message) {
             dirty = false;
             savedEdits.splice(0, savedEdits.length);
             savedEdits.push(...edits);
-            console.log(message);
             for (let pair of binary.headers) {
                 if (pair.key === 'schema') {
                     pair.value = message.body.schema;
-                    console.log("update to new schema path");
-                    console.log(pair.value);
                     break;
                 }
             }
             const content = binary.write(value.value, type.value);
-            vscode.postMessage({ command: MessageType.SAVE, body: { content: content, id: message.body.id } });
+            vscode.postMessage({ command: MessageType.SAVE, body: { content: content, id: message.body.id, file: message.body.file } });
             break;
 
         case MessageType.REVERT:

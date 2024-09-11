@@ -73,8 +73,8 @@ class EditorProvider {
 	 * @returns {Promise<Document>}
 	 */
 	async openCustomDocument(uri, _openContext, _token) {
+		console.log('openCustomDocument', uri);
 		const document = await Document.create(uri);
-
 		const listeners = [];
 		listeners.push(document.onEdit.event(e => {
 			this.onDidChange.fire({
@@ -83,14 +83,15 @@ class EditorProvider {
 				redo: e.redo,
 			});
 		}));
-
 		listeners.push(document.onExecuteAction.event(e => {
 			for (const webviewPanel of this.getWebviews(document.uri)) {
 				this.postMessage(webviewPanel, e.action, e.body);
 			}
 		}));
-
-		document.onDidDispose.event(() => this.disposeAll(listeners));
+		document.onDidDispose.event(() => {
+			this.disposeAll(listeners)
+			console.log('document dispose', document.uri);
+		});
 		return document;
 	}
 
@@ -101,6 +102,7 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async resolveCustomEditor(document, webviewPanel, _token) {
+		console.log('resolveCustomEditor', document.uri);
 		this.addWebview(document.uri, webviewPanel);
 		webviewPanel.webview.options = {
 			enableScripts: true,
@@ -115,7 +117,7 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async saveCustomDocument(document, cancellation) {
-		this.saveCustomDocumentAs(document, document.uri, cancellation);
+		return this.saveCustomDocumentAs(document, document.uri, cancellation);
 	}
 
 	/**
@@ -128,7 +130,6 @@ class EditorProvider {
 		if (cancellation.isCancellationRequested) {
 			return;
 		}
-		this.updateWebviewUri(document.uri, destination);
 		const saveId = this.saveId++;
 		const promise = new Promise(resolve => this.onSave.set(saveId, resolve));
 		document.save(destination, saveId);
@@ -175,6 +176,7 @@ class EditorProvider {
 		}
 		this.webviews.add(entry);
 		webview.onDidDispose(() => {
+			console.log('webview dispose', uri);
 			this.webviews.delete(entry);
 		});
 	}
@@ -189,21 +191,6 @@ class EditorProvider {
 		for (const entry of this.webviews) {
 			if (entry.resource === key) {
 				yield entry.webview;
-			}
-		}
-	}
-
-	/**
-	 * @param {vscode.Uri} oldUri
-	 * @param {vscode.Uri} newUri
-	 * @returns {void}
-	 * @private
-	 */
-	updateWebviewUri(oldUri, newUri) {
-		const key = oldUri.toString();
-		for (const entry of this.webviews) {
-			if (entry.resource === key) {
-				entry.resource = newUri.toString();
 			}
 		}
 	}
@@ -330,10 +317,10 @@ class EditorProvider {
 				return;
 
 			case MessageType.SAVE:
-				const uri = vscode.Uri.parse(document.file.filePath);
+				const uri = vscode.Uri.parse(message.body.file);
 				vscode.workspace.fs.writeFile(uri, message.body.content).then(() => {
-					console.log('Saved');
 					this.onSave.get(message.body.id)();
+					this.onSave.delete(message.body.id);
 				});
 				return;
 		}

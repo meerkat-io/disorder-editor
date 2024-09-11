@@ -1,4 +1,5 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+const path = require('path')
 const vscode = require('vscode')
 const { File } = require('./file');
 const { MessageType } = require('./message');
@@ -118,11 +119,14 @@ class Document {
 	 * @returns {Promise<void>}
 	 */
 	async save(targetResource, saveId) {
-		this.uri = targetResource;
-		this.file.updatePath(this.uri.path);
+		let schemaPath = this.file.schemaPath;
+		if (this.uri.path !== targetResource.path) {
+			const absSchemaPath = path.join(path.dirname(this.file.filePath), this.file.schemaPath);
+			schemaPath = path.relative(path.dirname(targetResource.path), absSchemaPath)
+		}
 		this.onExecuteAction.fire({
 			action: MessageType.SAVE,
-			body: { 'schema': this.file.schemaPath, 'id': saveId },
+			body: { schema: schemaPath, id: saveId, file: targetResource.path },
 		});
 	}
 

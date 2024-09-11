@@ -143,10 +143,8 @@ test('read and write primary types', () => {
 });
 
 test('read and write enum', () => {
-    (async () => {
-        const schema = new Schema();
-        await schema.load('./tests/data/enum.yaml');
-
+    const schema = new Schema();
+    schema.load('./tests/data/enum.yaml').then(() => {
         const enumType = schema.getEnum('test.color');
         const writer = new Writer();
         writer.write('blue', enumType);
@@ -154,7 +152,7 @@ test('read and write enum', () => {
 
         expect(reader.read()).toBe('blue');
         expect(() => writer.write('white', schema.getEnum('test.color'))).toThrow(new Error("value white is not a enum of [red,green,blue]"));
-    })();
+    });
 });
 
 test('read and write array & map', () => {
@@ -178,15 +176,14 @@ test('read and write array & map', () => {
     const zeroMap = [];
     writer.write(zeroArray, arrayType);
     writer.write(zeroMap, mapType);
-    
+
     assert.deepEqual(reader.read(), zeroArray);
     assert.deepEqual(reader.read(), zeroMap);
 });
 
 test('read and write struct', () => {
-    (async () => {
-        const schema = new Schema();
-        await schema.load('./tests/data/schema.yaml');
+    const schema = new Schema();
+    schema.load('./tests/data/schema.yaml').then(() => {
 
         const structType = schema.getMessage('test.object');
         const time = new Date().getTime();
@@ -212,7 +209,7 @@ test('read and write struct', () => {
         const reader = new Reader(writer.bytes);
 
         assert.deepEqual(reader.read(), object);
-    })();
+    });
 });
 
 test('loop struct is not allowed', () => {

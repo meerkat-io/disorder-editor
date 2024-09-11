@@ -99,18 +99,6 @@ class File {
     }
 
     /**
-     * @param {string} filePath
-     */
-    updatePath(filePath) {
-        if (this.filePath === filePath) {
-            return;
-        }
-        const absSchemaPath = path.join(path.dirname(this.filePath), this.schemaPath);
-        this.filePath = filePath;
-        this.schemaPath = path.relative(path.dirname(this.filePath), absSchemaPath)
-    }
-
-    /**
      * @param {string} message
      * @param {string} container
      * @returns {void}

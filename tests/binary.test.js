@@ -214,5 +214,4 @@ test('read and write struct', () => {
 
 test('loop struct is not allowed', () => {
     //TODO check loop struct
-    //TODO check other invalid schema
 });

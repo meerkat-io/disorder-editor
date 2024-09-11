@@ -282,7 +282,6 @@ class EditorProvider {
 	onMessage(webviewPanel, document, message) {
 		switch (message.command) {
 			case MessageType.READY:
-				//TODO const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
 				if (document.file.initialized === false) {
 					this.postMessage(webviewPanel, MessageType.SCHEMA, SchemaStatus.LOAD);
 				} else {

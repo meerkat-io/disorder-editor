@@ -29,6 +29,7 @@ function toggle() {
  * @param {number} index
  */
 function showContextMenu(event, index) {
+    event.stopPropagation();
     contextMenuLocation.value = { x: event.clientX, y: event.clientY, header: index === -1 };
     contextMenuVisable.value = true;
     currentRow.value = index;
@@ -80,16 +81,6 @@ function sendEdit(action, oldValue, newValue, index) {
 function handleEdit(edit) {
     emit('edit', edit);
 }
-
-/**
- * @param {number} index
- */
- function focusOut(index) {
-    if (index == value.value.length - 1) {
-        currentRow.value = index;
-        handleAction(ContextMenuAction.INSERT_BELOW);
-    }
-}
 </script>
 
 <template>
@@ -100,12 +91,12 @@ function handleEdit(edit) {
     <table v-if="expanded">
         <table-header :headers="headers" @contextmenu.prevent="showContextMenu($event, -1)" />
         <tbody>
-            <tr v-for="(item, index) in value" :key="index">
-                <td @contextmenu.prevent="showContextMenu($event, index)">
+            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
+                <td>
                     <key v-model="item.key" :path="props.path + index + '.key'"
                         @edit="handleEdit" />
                 </td>
-                <td @focusout="focusOut(index)">
+                <td>
                     <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
                         @edit="handleEdit" />
                 </td>

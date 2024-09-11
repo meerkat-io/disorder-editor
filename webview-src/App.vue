@@ -195,38 +195,9 @@ function onSelectMessage() {
 }
 
 //TODO: tab to add row
+//TODO: handle invalid content (e.g. invalid map key, invalid input value)
 
 vscode.postMessage({ command: MessageType.READY });
-/**
- * 
-    load() {
-    	
-    }
-
-    save(cancellation) {
-        this.saveAs(this.uri, cancellation);
-        this.savedEdits = Array.from(this.edits);
-    }
-
-    saveAs(targetResource, cancellation) {
-        this.uri = targetResource;
-        if (cancellation.isCancellationRequested) {
-            return;
-        }
-        this.file.filePath = this.uri.path;
-        this.file.write(this.file.value);
-    }
-
-    revert(_cancellation) {
-        this.load();
-        this.edits = this.savedEdits;
-
-        this.onDidChangeDocument.fire({
-            content: fs.readFileSync(this.uri.path),
-            edits: this.edits,
-        });
-    }
- */
 </script>
 
 <template>

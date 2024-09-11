@@ -623,12 +623,12 @@ class Writer {
 
 /**
  * @property {Type} headerType
- * @property {[]} headers
+ * @property {Object[]} headers
  */ 
 class Binary {
     constructor() {
         /**
-         * @type {[]}
+         * @type {Object[]}
          */
         this.headers = [];
         /**

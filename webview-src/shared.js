@@ -170,6 +170,7 @@ const MessageType = {
     UNDO: 'undo',
     REDO: 'redo',
     SAVE: 'save',
+    REVERT: 'revert',
 
     SCHEMA: 'schema',
     MESSAGE: 'message',

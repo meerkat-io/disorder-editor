@@ -90,12 +90,24 @@ class File {
     }
 
     /**
-     * @param {string} asbSchemaPath 
+     * @param {string} absSchemaPath 
      * @returns {Promise<string[]>}
      */
-    async loadSchema(asbSchemaPath) {
-        this.schemaPath = path.relative(path.dirname(this.filePath), asbSchemaPath)
-        return this.schema.load(asbSchemaPath);
+    async loadSchema(absSchemaPath) {
+        this.schemaPath = path.relative(path.dirname(this.filePath), absSchemaPath)
+        return this.schema.load(absSchemaPath);
+    }
+
+    /**
+     * @param {string} filePath
+     */
+    updatePath(filePath) {
+        if (this.filePath === filePath) {
+            return;
+        }
+        const absSchemaPath = path.join(path.dirname(this.filePath), this.schemaPath);
+        this.filePath = filePath;
+        this.schemaPath = path.relative(path.dirname(this.filePath), absSchemaPath)
     }
 
     /**

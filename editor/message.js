@@ -4,6 +4,7 @@ class MessageType {
     static UNDO = 'undo';
 	static REDO = 'redo';
 	static SAVE = 'save';
+    static REVERT = 'revert';
 
     static SCHEMA = 'schema';
     static MESSAGE = 'message';

@@ -39,6 +39,14 @@ class EditorProvider {
 		 * @type {vscode.Event<vscode.CustomDocumentEditEvent<Document>>}
 		 */
 		this.onDidChangeCustomDocument = this.onDidChange.event;
+		/**
+		 * @type {number}
+		 */
+		this.saveId = 0;
+		/**
+		 * @type {Map<number, (response: any) => void>}
+		 */
+		this.onSave = new Map();
 	}
 
 	/**
@@ -78,7 +86,7 @@ class EditorProvider {
 
 		listeners.push(document.onExecuteAction.event(e => {
 			for (const webviewPanel of this.getWebviews(document.uri)) {
-				this.postMessage(webviewPanel, e.action, {});
+				this.postMessage(webviewPanel, e.action, e.body);
 			}
 		}));
 
@@ -107,7 +115,7 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async saveCustomDocument(document, cancellation) {
-		document.save(cancellation);
+		this.saveCustomDocumentAs(document, document.uri, cancellation);
 	}
 
 	/**
@@ -117,7 +125,14 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async saveCustomDocumentAs(document, destination, cancellation) {
-		document.saveAs(destination, cancellation);
+		if (cancellation.isCancellationRequested) {
+			return;
+		}
+		this.updateWebviewUri(document.uri, destination);
+		const saveId = this.saveId++;
+		const promise = new Promise(resolve => this.onSave.set(saveId, resolve));
+		document.save(destination, saveId);
+		return promise;
 	}
 
 	/**
@@ -126,7 +141,15 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async revertCustomDocument(document, cancellation) {
-		document.revert(cancellation);
+		if (cancellation.isCancellationRequested) {
+			return;
+		}
+		await document.load();
+		for (const webviewPanel of this.getWebviews(document.uri)) {
+			this.postMessage(webviewPanel, MessageType.REVERT, {
+				content: document.file.content,
+			});
+		}
 	}
 
 	/**
@@ -166,6 +189,21 @@ class EditorProvider {
 		for (const entry of this.webviews) {
 			if (entry.resource === key) {
 				yield entry.webview;
+			}
+		}
+	}
+
+	/**
+	 * @param {vscode.Uri} oldUri
+	 * @param {vscode.Uri} newUri
+	 * @returns {void}
+	 * @private
+	 */
+	updateWebviewUri(oldUri, newUri) {
+		const key = oldUri.toString();
+		for (const entry of this.webviews) {
+			if (entry.resource === key) {
+				entry.resource = newUri.toString();
 			}
 		}
 	}
@@ -293,7 +331,10 @@ class EditorProvider {
 
 			case MessageType.SAVE:
 				const uri = vscode.Uri.parse(document.file.filePath);
-				vscode.workspace.fs.writeFile(uri, message.body);
+				vscode.workspace.fs.writeFile(uri, message.body.content).then(() => {
+					console.log('Saved');
+					this.onSave.get(message.body.id)();
+				});
 				return;
 		}
 	}

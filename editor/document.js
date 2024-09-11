@@ -11,7 +11,7 @@ const { MessageType } = require('./message');
  * @property {vscode.Disposable[]} disposables
  * @property {vscode.EventEmitter<void>} onDidDispose
  * @property {vscode.EventEmitter<{undo(): void, redo(): void}>} onEdit
- * @property {vscode.EventEmitter<{content?: Uint8Array, action: string}>} onExecuteAction
+ * @property {vscode.EventEmitter<{action: string, body: Object}>} onExecuteAction
  */
 class Document {
 
@@ -49,7 +49,7 @@ class Document {
 		this.register(this.onEdit);
 
 		/**
-		 * @type {vscode.EventEmitter<{content?: Uint8Array, action: string}>}
+		 * @type {vscode.EventEmitter<{action: string, body: Object}>}
 		 */
 		this.onExecuteAction = new vscode.EventEmitter();
 		this.register(this.onExecuteAction);
@@ -93,11 +93,13 @@ class Document {
 			undo: () => {
 				this.onExecuteAction.fire({
 					action: MessageType.UNDO,
+					body: {},
 				});
 			},
 			redo: () => {
 				this.onExecuteAction.fire({
 					action: MessageType.REDO,
+					body: {},
 				});
 			}
 		});
@@ -111,39 +113,17 @@ class Document {
 	}
 
 	/**
-	 * @param {vscode.CancellationToken} cancellation
-	 * @returns {Promise<void>}
-	 */
-	async save(cancellation) {
-		this.saveAs(this.uri, cancellation);
-	}
-
-	/**
 	 * @param {vscode.Uri} targetResource
-	 * @param {vscode.CancellationToken} cancellation
+	 * @param {number} saveId
 	 * @returns {Promise<void>}
 	 */
-	async saveAs(targetResource, cancellation) {
+	async save(targetResource, saveId) {
 		this.uri = targetResource;
-		if (cancellation.isCancellationRequested) {
-			return;
-		}
-		this.file.filePath = this.uri.path;
+		this.file.updatePath(this.uri.path);
 		this.onExecuteAction.fire({
 			action: MessageType.SAVE,
+			body: { 'schema': this.file.schemaPath, 'id': saveId },
 		});
-	}
-
-	/**
-	 * @param {vscode.CancellationToken} _cancellation
-	 * @returns {Promise<void>}
-	 */
-	async revert(_cancellation) {
-		this.load();
-		/* TODO send revert command to webview
-		this.onDidChangeDocument.fire({
-			content: fs.readFileSync(this.uri.path),
-		});*/
 	}
 
 	/**
@@ -156,7 +136,7 @@ class Document {
 		//TODO: implement backup feature later
 		return {
 			id: destination.toString(),
-			delete: async () => {}
+			delete: async () => { }
 		};
 	}
 }

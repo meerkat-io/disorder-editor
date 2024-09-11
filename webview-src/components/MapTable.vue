@@ -42,7 +42,7 @@ function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
             const aboveRowValue = { key: '', value: getDefaultValue(props.type.reference.type) };
-            value.value.splice(value.value, 0, aboveRowValue);
+            value.value.splice(currentRow.value, 0, aboveRowValue);
             sendEdit(action, null, aboveRowValue, currentRow.value);
             break;
 

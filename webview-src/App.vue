@@ -194,8 +194,9 @@ function onSelectMessage() {
     vscode.postMessage({ command: MessageType.MESSAGE, body: { message: messageType.value, container: containerType.value } })
 }
 
-//TODO: tab to add row
+//TODO: fix insert above issue
 //TODO: handle invalid content (e.g. invalid map key, invalid input value)
+//TODO: check & fix undo/redo
 
 vscode.postMessage({ command: MessageType.READY });
 </script>

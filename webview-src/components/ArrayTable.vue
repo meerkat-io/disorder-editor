@@ -25,6 +25,7 @@ function toggle() {
  * @param {number} index
  */
 function showContextMenu(event, index) {
+    event.stopPropagation();
     contextMenuLocation.value = { x: event.clientX, y: event.clientY, header: index === -1 };
     contextMenuVisable.value = true;
     currentRow.value = index;
@@ -37,7 +38,7 @@ function handleAction(action) {
     switch (action) {
         case ContextMenuAction.INSERT_ABOVE:
             const aboveRowValue = { value: generateDefaultValue() };
-            value.value.splice(value.value, 0, aboveRowValue);
+            value.value.splice(currentRow.value, 0, aboveRowValue);
             sendEdit(action, null, aboveRowValue, currentRow.value);
             break;
 
@@ -129,8 +130,8 @@ onMounted(() => {
     <table v-if="expanded">
         <table-header :headers="headers" @contextmenu.prevent="showContextMenu($event, -1)" />
         <tbody v-if="props.type.reference.type === Type.STRUCT">
-            <tr v-for="(item, index) in value" :key="index">
-                <td @contextmenu.prevent="showContextMenu($event, index)">
+            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
+                <td>
                     {{ index }}
                 </td>
                 <td v-for="(subItem, subIndex) in item.value" :key="index + '.' + subIndex">
@@ -140,8 +141,8 @@ onMounted(() => {
             </tr>
         </tbody>
         <tbody v-if="props.type.reference.type !== Type.STRUCT">
-            <tr v-for="(item, index) in value" :key="index">
-                <td @contextmenu.prevent="showContextMenu($event, index)">
+            <tr v-for="(item, index) in value" :key="index" @contextmenu.prevent="showContextMenu($event, index)">
+                <td>
                     {{ index }}
                 </td>
                 <td>

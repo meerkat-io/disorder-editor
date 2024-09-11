@@ -89,6 +89,25 @@ function handleEdit(edit) {
     emit('edit', edit);
 }
 
+/**
+ * @param {number} index
+ * @param {number} subIndex
+ */
+function focusOut(index, subIndex) {
+    if (props.type.reference.type === Type.STRUCT) {
+        const fieldsCount = Object.keys(props.type.reference.fields).length;
+        if (index == value.value.length - 1 && subIndex == fieldsCount - 1) {
+            currentRow.value = index;
+            handleAction(ContextMenuAction.INSERT_BELOW);
+        }
+    } else {
+        if (index == value.value.length - 1) {
+            currentRow.value = index;
+            handleAction(ContextMenuAction.INSERT_BELOW);
+        }
+    }
+}
+
 onMounted(() => {
     headers.value.push({ name: '', resizable: false });
     if (props.type.reference.type === Type.STRUCT) {
@@ -133,7 +152,7 @@ onMounted(() => {
                 <td @contextmenu.prevent="showContextMenu($event, index)">
                     {{ index }}
                 </td>
-                <td v-for="(subItem, subIndex) in item.value" :key="index + '.' + subIndex">
+                <td v-for="(subItem, subIndex) in item.value" :key="index + '.' + subIndex" @focusout="focusOut(index, subIndex)">
                     <cell :type="props.type.reference.fields[subItem.key]" v-model="subItem.value"
                         :path="props.path + index + '.value.' + subIndex + '.value'" @edit="handleEdit" />
                 </td>
@@ -144,7 +163,7 @@ onMounted(() => {
                 <td @contextmenu.prevent="showContextMenu($event, index)">
                     {{ index }}
                 </td>
-                <td>
+                <td @focusout="focusOut(index, 0)">
                     <cell :type="props.type.reference" v-model="item.value" :path="props.path + index + '.value'"
                         @edit="handleEdit" />
                 </td>

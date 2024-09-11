@@ -638,8 +638,6 @@ class Binary {
         this.headerType.reference = new Type('string');
     }
 
-    //TODO update schema file path (save as) //SCHEMA: "schema",
-
     /**
      * @param {Uint8Array} content
      * @returns {any}

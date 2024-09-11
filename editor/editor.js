@@ -89,8 +89,8 @@ class EditorProvider {
 			}
 		}));
 		document.onDidDispose.event(() => {
-			this.disposeAll(listeners)
 			console.log('document dispose', document.uri);
+			this.disposeAll(listeners)
 		});
 		return document;
 	}

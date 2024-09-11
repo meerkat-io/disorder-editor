@@ -67,9 +67,11 @@ class Document {
 	}
 
 	dispose() {
+		console.log('dispose document', this.uri);
 		if (this.disposed) {
 			return;
 		}
+		console.log('dispose document resources', this.uri);
 		this.disposed = true;
 		this.disposables.forEach(disposable => {
 			disposable.dispose();

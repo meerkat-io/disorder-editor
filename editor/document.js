@@ -38,12 +38,6 @@ class Document {
 		this.disposables = [];
 
 		/**
-		 * @type {vscode.EventEmitter<void>}
-		 */
-		this.onDidDispose = new vscode.EventEmitter();
-		this.register(this.onDidDispose);
-
-		/**
 		 * @type {vscode.EventEmitter<{undo(): void, redo(): void}>}
 		 */
 		this.onEdit = new vscode.EventEmitter();
@@ -67,17 +61,14 @@ class Document {
 	}
 
 	dispose() {
-		console.log('dispose document', this.uri);
 		if (this.disposed) {
 			return;
 		}
-		console.log('dispose document resources', this.uri);
 		this.disposed = true;
 		this.disposables.forEach(disposable => {
 			disposable.dispose();
 		});
 		this.disposables = [];
-		this.onDidDispose.fire();
 	}
 
 	/**

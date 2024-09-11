@@ -73,24 +73,18 @@ class EditorProvider {
 	 * @returns {Promise<Document>}
 	 */
 	async openCustomDocument(uri, _openContext, _token) {
-		console.log('openCustomDocument', uri);
 		const document = await Document.create(uri);
-		const listeners = [];
-		listeners.push(document.onEdit.event(e => {
+		document.onEdit.event(e => {
 			this.onDidChange.fire({
 				document: document,
 				undo: e.undo,
 				redo: e.redo,
 			});
-		}));
-		listeners.push(document.onExecuteAction.event(e => {
+		});
+		document.onExecuteAction.event(e => {
 			for (const webviewPanel of this.getWebviews(document.uri)) {
 				this.postMessage(webviewPanel, e.action, e.body);
 			}
-		}));
-		document.onDidDispose.event(() => {
-			console.log('document dispose', document.uri);
-			this.disposeAll(listeners)
 		});
 		return document;
 	}
@@ -102,7 +96,6 @@ class EditorProvider {
 	 * @returns {Promise<void>}
 	 */
 	async resolveCustomEditor(document, webviewPanel, _token) {
-		console.log('resolveCustomEditor', document.uri);
 		this.addWebview(document.uri, webviewPanel);
 		webviewPanel.webview.options = {
 			enableScripts: true,
@@ -176,7 +169,6 @@ class EditorProvider {
 		}
 		this.webviews.add(entry);
 		webview.onDidDispose(() => {
-			console.log('webview dispose', uri);
 			this.webviews.delete(entry);
 		});
 	}
@@ -245,19 +237,6 @@ class EditorProvider {
 			text += possible.charAt(Math.floor(Math.random() * possible.length));
 		}
 		return text;
-	}
-
-	/**
-	 * @param {vscode.Disposable[]} disposables 
-	 * @private
-	 */
-	disposeAll(disposables) {
-		while (disposables.length) {
-			const item = disposables.pop();
-			if (item) {
-				item.dispose();
-			}
-		}
 	}
 
 	//#region Comunication with webview

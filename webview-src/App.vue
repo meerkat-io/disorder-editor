@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, provide } from 'vue'
+import { replaceAt } from './tree'
 
 const vscode = acquireVsCodeApi();
 
@@ -13,6 +14,18 @@ const schemaStatus = ref('empty')
 const schemaMessages = ref([])
 const grid = ref(null)
 const error = ref('')
+
+// Edits are answered by the extension host (validated against the schema).
+let nextEdit = 1
+const pendingEdits = new Map()
+const request = (command, body) => new Promise(resolve => {
+  const id = nextEdit++
+  pendingEdits.set(id, resolve)
+  vscode.postMessage({ command, body: { id, ...body } })
+})
+provide('editNode', (path, text) => request('edit', { path, text }))
+// 'add' (an array item, map entry or struct field) and 'remove' answer with an error or nothing.
+provide('mutate', request)
 
 onMounted(() => window.addEventListener('message', (event) => receiveMessage(event.data)))
 
@@ -32,6 +45,18 @@ function receiveMessage(message) {
     case 'show_datagrid':
       currentView.value = datagridView
       grid.value = message.body
+      break
+
+    case 'edit_result': {
+      const resolve = pendingEdits.get(message.body.id)
+      pendingEdits.delete(message.body.id)
+      if (message.body.node) replaceAt(grid.value, message.body.path, message.body.node)
+      if (resolve) resolve({ error: message.body.error })
+      break
+    }
+
+    case 'update_node': // undo / redo
+      if (grid.value) replaceAt(grid.value, message.body.path, message.body.node)
       break
 
     case 'show_error':

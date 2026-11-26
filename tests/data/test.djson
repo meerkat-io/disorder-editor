@@ -1,0 +1,6 @@
+{
+  "schema": "schema.yaml",
+  "message": "test.object",
+  "container": "array",
+  "data": []
+}

@@ -199,3 +199,66 @@ td.val table {
 .v-timestamp { color: var(--time-color); }
 .v-bytes { color: var(--literal-color); font-style: italic; }
 .v-empty { opacity: 0.35; }
+
+/* Editable values */
+.editable {
+  display: inline-block;
+  min-width: 3em;
+  min-height: 1.3em;
+  max-width: 32em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+  padding: 0 4px;
+  margin: 0 -4px;
+  border-radius: 4px;
+  cursor: text;
+}
+.editable:hover { background: var(--stripe); outline: 1px solid var(--border); }
+
+.editor { display: inline-flex; flex-direction: column; gap: 2px; }
+.edit-input, .enum-select {
+  font: inherit;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, var(--border));
+  border-radius: 4px;
+  padding: 1px 6px;
+  min-width: 14em;
+}
+.edit-input:focus, .enum-select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+.edit-input.invalid, .radios.invalid { border-color: var(--vscode-inputValidation-errorBorder, #be1100); outline: 1px solid var(--vscode-inputValidation-errorBorder, #be1100); }
+.edit-error { color: var(--vscode-errorForeground, #f14c4c); font-size: 0.85em; white-space: normal; max-width: 28em; }
+
+.radios { display: inline-flex; gap: 14px; }
+.radios label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--literal-color); }
+
+/* Add / remove controls */
+.icon-btn {
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--vscode-textLink-foreground, inherit);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 8px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+.icon-btn:hover { background: var(--stripe); border-color: var(--vscode-focusBorder); }
+.icon-btn.del {
+  color: var(--vscode-errorForeground, #f14c4c);
+  padding: 0 6px;
+  opacity: 0;
+}
+td.key:hover .icon-btn.del, .icon-btn.del:focus-visible { opacity: 1; }
+
+/* A field that is not in the file: its default value is shown dimmed until it is edited */
+.unset { opacity: 0.55; }
+.unset:hover, .unset:focus-within { opacity: 1; }
+
+.time-edit { display: inline-flex; align-items: center; gap: 6px; }
+.time-input { min-width: 0; color-scheme: light dark; }
+.tz { opacity: 0.6; font-size: 0.85em; }
+.time-edit .icon-btn { margin-left: 0; }

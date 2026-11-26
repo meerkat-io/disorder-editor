@@ -51,15 +51,6 @@ class EditorProvider {
 			});
 	}
 
-	/**
-	 * @param {Document} doc 
-	 */
-	async getFileData(doc) {
-		//TODO: ask the webview for the edited data. Until the grid is editable the
-		// document content is unchanged, so write it back as is (never an empty file).
-		return doc.documentData;
-	}
-
 	//#region CustomEditorProvider
 	/**
 	 * @param {vscode.Uri} uri 
@@ -80,12 +71,13 @@ class EditorProvider {
 		}));
 
 		listeners.push(doc.onDidChangeDocument.event(e => {
-			// Update all webviews when the document changes
+			// Undo/redo changes one value; a revert reloads everything.
 			for (const webviewPanel of this.getWebviews(doc.uri)) {
-				this.postMessage(webviewPanel, 'update', {
-					edits: e.edits,
-					content: e.content,
-				});
+				if (e.change) {
+					this.postMessage(webviewPanel, 'update_node', e.change);
+				} else if (e.content) {
+					this.showDocument(webviewPanel, doc);
+				}
 			}
 		}));
 
@@ -114,7 +106,6 @@ class EditorProvider {
 	 * @returns {Thenable<void>}
 	 */
 	saveCustomDocument(document, cancellation) {
-		//TODO: fetch data from webview then save
 		return document.save(cancellation);
 	}
 
@@ -125,7 +116,6 @@ class EditorProvider {
 	 * @returns {Thenable<void>}
 	 */
 	saveCustomDocumentAs(document, destination, cancellation) {
-		//TODO: fetch data from webview then save as
 		return document.saveAs(destination, cancellation);
 	}
 
@@ -135,7 +125,6 @@ class EditorProvider {
 	 * @returns {Thenable<void>}
 	 */
 	revertCustomDocument(document, cancellation) {
-		//TODO
 		return document.revert(cancellation);
 	}
 
@@ -146,7 +135,6 @@ class EditorProvider {
 	 * @returns {Thenable<vscode.CustomDocumentBackup>}
 	 */
 	backupCustomDocument(document, context, cancellation) {
-		//TODO
 		return document.backup(context.destination, cancellation);
 	}
 	//#endregion
@@ -281,16 +269,7 @@ class EditorProvider {
 	async handleMessage(webviewPanel, document, message) {
 		switch (message.command) {
 			case 'ready':
-				if (document.documentData.length === 0) {
-					this.postMessage(webviewPanel, 'select_schema', 'empty');
-					return;
-				}
-				try {
-					this.postMessage(webviewPanel, 'show_datagrid', document.openExisting());
-				} catch (error) {
-					vscode.window.showErrorMessage(`Cannot open ${path.basename(document.uri.fsPath)}: ${error.message}`);
-					this.postMessage(webviewPanel, 'show_error', error.message);
-				}
+				this.showDocument(webviewPanel, document);
 				return;
 
 			case 'pick_schema':
@@ -312,6 +291,7 @@ class EditorProvider {
 					const bytes = document.encode(header, type, value);
 					await vscode.workspace.fs.writeFile(document.uri, bytes);
 					document.documentData = bytes;
+					document.setRoot(header, type, value);
 					this.postMessage(webviewPanel, 'show_datagrid', {
 						message: name,
 						container,
@@ -326,11 +306,48 @@ class EditorProvider {
 			}
 
 			case 'edit':
-				document.edit(message.body);
+			case 'add':
+			case 'remove': {
+				// Answered with the refreshed node (the value, or the container for add/remove) or an error.
+				const { id, path: valuePath, text, key } = message.body;
+				try {
+					let result;
+					if (message.command === 'edit') {
+						result = document.editValue(valuePath, text);
+					} else if (message.command === 'add') {
+						result = document.addValue(valuePath, key);
+					} else {
+						result = document.removeValue(valuePath);
+					}
+					this.postMessage(webviewPanel, 'edit_result', { id, ...result });
+				} catch (error) {
+					this.postMessage(webviewPanel, 'edit_result', { id, error: error.message });
+				}
 				return;
+			}
 		}
 	}
 	//#endregion
+
+	/**
+	 * Shows the file content, the new-file wizard for an empty file, or the error.
+	 *
+	 * @param {vscode.WebviewPanel} webviewPanel
+	 * @param {Document} document
+	 * @private
+	 */
+	showDocument(webviewPanel, document) {
+		if (document.documentData.length === 0) {
+			this.postMessage(webviewPanel, 'select_schema', 'empty');
+			return;
+		}
+		try {
+			this.postMessage(webviewPanel, 'show_datagrid', document.openExisting());
+		} catch (error) {
+			vscode.window.showErrorMessage(`Cannot open ${path.basename(document.uri.fsPath)}: ${error.message}`);
+			this.postMessage(webviewPanel, 'show_error', error.message);
+		}
+	}
 
 	/**
 	 * @param {vscode.WebviewPanel} webviewPanel

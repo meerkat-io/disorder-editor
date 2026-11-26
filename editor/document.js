@@ -7,6 +7,7 @@ const { Schema } = require('../disorder/schema');
 const { Disorder } = require('../disorder/disorder');
 const { DisorderJson } = require('../disorder/json');
 const { toView, rootType } = require('../disorder/view');
+const { editAt, getAt, typeAt, addAt, removeAt } = require('../disorder/mutate');
 
 /** @typedef {import('./editor').EditorProvider} EditorProvider */
 
@@ -50,6 +51,11 @@ class Document {
 		 * @type {string}
 		 */
 		this.schemaPath = '';
+		/**
+		 * The live (possibly edited) content, once a file is opened or created.
+		 * @type {{header: Map<string, string>, type: import('../disorder/schema').Type, value: any}|undefined}
+		 */
+		this.root = undefined;
 
 		/**
 		 * @type {boolean}
@@ -96,8 +102,8 @@ class Document {
 	static async create(uri, backupId, editorProvider) {
 		// If we have a backup, read that. Otherwise read the resource from the workspace
 		const dataFile = typeof backupId === 'string' ? vscode.Uri.parse(backupId) : uri;
-		const document = new Document(dataFile, editorProvider);
-		await document.readFile();
+		const document = new Document(uri, editorProvider);
+		await document.readFile(dataFile);
 		return document;
 	}
 
@@ -132,7 +138,109 @@ class Document {
 		}
 		this.loadSchema(path.resolve(path.dirname(this.uri.fsPath), schema));
 		const type = rootType(this.schema, message, container);
-		return { message, container, schemaPath: this.schemaPath, root: toView(read(type), type) };
+		const value = read(type);
+		this.root = { header, type, value };
+		return { message, container, schemaPath: this.schemaPath, root: toView(value, type) };
+	}
+
+	/**
+	 * @param {Map<string, string>} header
+	 * @param {import('../disorder/schema').Type} type
+	 * @param {any} value
+	 */
+	setRoot(header, type, value) {
+		this.root = { header, type, value };
+	}
+
+	/**
+	 * Sets the primitive at `path` from the text typed in the grid (validated against the
+	 * schema type) and records an undoable edit. A field that is not set yet gets set.
+	 *
+	 * @param {(string|number)[]} path
+	 * @param {string} text
+	 * @returns {{path: (string|number)[], node: object}} the refreshed view node (the edited
+	 *   value, or the topmost field that had to be created for it)
+	 */
+	editValue(path, text) {
+		const result = editAt(this.requireRoot().type, this.root.value, path, text);
+		return result.changed ? this.mutated(result) : { path, node: toView(result.value, result.type) };
+	}
+
+	/**
+	 * Adds an array item, a map entry named `key`, or the struct field `key` to the
+	 * container at `path`.
+	 *
+	 * @param {(string|number)[]} path
+	 * @param {string} [key]
+	 * @returns {{path: (string|number)[], node: object}} the refreshed view node
+	 */
+	addValue(path, key) {
+		return this.mutated(addAt(this.requireRoot().type, this.root.value, path, key));
+	}
+
+	/**
+	 * Removes the array item, map entry or struct field at `path`.
+	 *
+	 * @param {(string|number)[]} path
+	 * @returns {{path: (string|number)[], node: object}} the refreshed view node of the parent
+	 */
+	removeValue(path) {
+		return this.mutated(removeAt(this.requireRoot().type, this.root.value, path));
+	}
+
+	/**
+	 * @returns {{header: Map<string, string>, type: import('../disorder/schema').Type, value: any}}
+	 */
+	requireRoot() {
+		if (!this.root) {
+			throw new Error('no data loaded');
+		}
+		return this.root;
+	}
+
+	/**
+	 * Records an already applied structural change as an undoable edit.
+	 *
+	 * @param {{path: (string|number)[], type: import('../disorder/schema').Type, undo: () => void, redo: () => void}} change
+	 * @returns {{path: (string|number)[], node: object}}
+	 */
+	mutated({ path, type, undo, redo }) {
+		this.edit({ path, type, undo, redo });
+		return this.viewAt(path);
+	}
+
+	/**
+	 * The view node at `path`; when the value is gone (an undone creation) its parent, which
+	 * then shows the field as unset.
+	 *
+	 * @param {(string|number)[]} path
+	 * @returns {{path: (string|number)[], node: object}}
+	 */
+	viewAt(path) {
+		try {
+			return { path, node: toView(getAt(this.root.value, path), typeAt(this.root.type, path)) };
+		} catch (error) {
+			if (path.length === 0) {
+				throw error;
+			}
+			return this.viewAt(path.slice(0, -1));
+		}
+	}
+
+	/**
+	 * @param {vscode.Uri} [target] pass the file being written to keep the schema path
+	 *   relative to it; omit for backups, which are read back relative to this document
+	 * @returns {Uint8Array} the current content in this document's format
+	 */
+	fileData(target) {
+		if (!this.root) {
+			return this.documentData;
+		}
+		const header = new Map(this.root.header);
+		if (target && path.dirname(target.fsPath) !== path.dirname(this.uri.fsPath)) {
+			header.set('schema', path.relative(path.dirname(target.fsPath), this.schemaPath));
+		}
+		return this.encode(header, this.root.type, this.root.value);
 	}
 
 	/**
@@ -189,22 +297,25 @@ class Document {
 	}
 
 	/**
-	 * @param {Edit} edit
+	 * @param {{path: (string|number)[], type: import('../disorder/schema').Type, undo: () => void, redo: () => void}} edit
 	 */
 	edit(edit) {
 		this.edits.push(edit);
+		// `edit.path` is the node whose view changed: the value itself, or its container.
+		const refresh = () => this.onDidChangeDocument.fire({
+			edits: this.edits,
+			change: this.viewAt(edit.path),
+		});
 		this.onDidChange.fire({
 			undo: async () => {
 				this.edits.pop();
-				this.onDidChangeDocument.fire({
-					edits: this.edits,
-				});
+				edit.undo();
+				refresh();
 			},
 			redo: async () => {
 				this.edits.push(edit);
-				this.onDidChangeDocument.fire({
-					edits: this.edits,
-				});
+				edit.redo();
+				refresh();
 			}
 		});
 	}
@@ -212,10 +323,10 @@ class Document {
 	/**
 	 * @returns {Promise<void>}
 	 */
-	async readFile() {
-		this.documentData = this.uri.scheme === 'untitled'
+	async readFile(source = this.uri) {
+		this.documentData = source.scheme === 'untitled'
 			? new Uint8Array()
-			: new Uint8Array(await vscode.workspace.fs.readFile(this.uri));
+			: new Uint8Array(await vscode.workspace.fs.readFile(source));
 	}
 
 	/**
@@ -230,14 +341,18 @@ class Document {
 	/**
 	 * @param {vscode.Uri} targetResource
 	 * @param {vscode.CancellationToken} cancellation
+	 * @param {boolean} [forBackup]
 	 * @returns {Promise<void>}
 	 */
-	async saveAs(targetResource, cancellation) {
-		const fileData = await this.editorProvider.getFileData(this);
+	async saveAs(targetResource, cancellation, forBackup = false) {
+		const fileData = this.fileData(forBackup ? undefined : targetResource);
 		if (cancellation.isCancellationRequested) {
 			return;
 		}
 		await vscode.workspace.fs.writeFile(targetResource, fileData);
+		if (!forBackup && targetResource.toString() === this.uri.toString()) {
+			this.documentData = fileData;
+		}
 	}
 
 	/**
@@ -259,7 +374,7 @@ class Document {
 	 * @returns {Promise<vscode.CustomDocumentBackup>}
 	 */
 	async backup(destination, cancellation) {
-		await this.saveAs(destination, cancellation);
+		await this.saveAs(destination, cancellation, true);
 
 		return {
 			id: destination.toString(),

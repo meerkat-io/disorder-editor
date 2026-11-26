@@ -1,5 +1,5 @@
 <script setup>
-import { ref, inject, nextTick } from 'vue'
+import { ref, computed, inject, nextTick } from 'vue'
 
 // One editable value. The extension validates the text against the schema type and
 // answers with the accepted node (shown via the `node` prop) or an error message.
@@ -10,6 +10,7 @@ const props = defineProps({
 })
 const editNode = inject('editNode')
 
+const node_text = node => node.t === 'string' ? node.v.replace(/\r?\n/g, '\u21b5') : String(node.v)
 const group = 'bool-' + (groups++)
 const editing = ref(false)
 const draft = ref('')
@@ -37,6 +38,8 @@ async function commit(text) {
 }
 
 // The native picker has no timezone, so it edits the UTC date and time (what is stored).
+// Newlines would collapse in the single-line cell; show them as a symbol.
+const shown = computed(() => node_text(props.node))
 const isTime = () => props.node.t === 'timestamp'
 const toPicker = iso => iso.replace(/Z$/, '')
 const fromPicker = value => value + 'Z'
@@ -105,6 +108,15 @@ async function pick(event) {
     <span v-if="error" class="edit-error">{{ error }}</span>
   </span>
 
+  <span v-else-if="editing && node.t === 'string'" class="editor">
+    <!-- Enter inserts a newline; Ctrl/Cmd+Enter or leaving the field commits -->
+    <textarea ref="input" v-model="draft" class="edit-input text-area" :class="{ invalid: error }" spellcheck="false"
+      :rows="Math.min(12, Math.max(1, draft.split('\n').length))" title="Ctrl/Cmd+Enter to save, Esc to cancel"
+      @keydown.enter.ctrl.prevent="submit" @keydown.enter.meta.prevent="submit" @keydown.esc.prevent="cancel"
+      @input="error = ''" @blur="blur"></textarea>
+    <span v-if="error" class="edit-error">{{ error }}</span>
+  </span>
+
   <span v-else-if="editing" class="editor">
     <input ref="input" v-model="draft" class="edit-input" :class="{ invalid: error }" spellcheck="false"
       :placeholder="hints[node.t]" :inputmode="['int', 'long', 'float', 'double'].includes(node.t) ? 'decimal' : 'text'"
@@ -113,5 +125,5 @@ async function pick(event) {
   </span>
 
   <span v-else :class="['editable', 'v-' + node.t, { unset: node.unset }]" :title="node.v === '' ? '' : String(node.v)" @click="start">{{
-    String(node.v) }}</span>
+    shown }}</span>
 </template>

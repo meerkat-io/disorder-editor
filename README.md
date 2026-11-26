@@ -3,19 +3,33 @@
 A VS Code custom editor for [Disorder](https://github.com/meerkat-io/disorder) data files, a strongly typed data format
 described by a yaml schema. Two file types are supported: `*.dbin` (binary) and `*.djson` (JSON).
 
-> **Status: work in progress.** The editor can create a new `.dbin` file from a schema and open existing
-> ones in a read-only data grid. Editing and saving edited data are not implemented yet (see [Roadmap](#roadmap)).
+## Features
 
-## What works today
+* Open `*.dbin` and `*.djson` files in an editable data grid (struct / map / array shown as expandable tables).
+* Create a new file: open an empty `*.dbin` or `*.djson` file to get a wizard that asks for a schema (`.yaml` / `.yml`),
+  the root message type and a container (`none`, `array` or `map`).
+* Edit values in place, checked against the schema:
 
-Opening an empty `*.dbin` file shows a small wizard:
+  | type      | editor                                                                          |
+  | --------- | ------------------------------------------------------------------------------- |
+  | int, long, float, double | text input, validated on Enter / blur (range and format)         |
+  | string    | multi-line text area (Enter = newline, Ctrl/Cmd+Enter or leaving the field saves) |
+  | bool      | radio buttons                                                                   |
+  | enum      | select                                                                          |
+  | timestamp | native date-time picker (UTC, millisecond precision) and a "now" button         |
+  | bytes     | base64 text                                                                     |
 
-1. pick a schema file (`.yaml` / `.yml`)
-2. pick the root message type and a container (`none`, `array` or `map`)
-3. the file is initialised with a header and an empty value
+  Enter or leaving the field commits, `Esc` cancels, and an invalid value shows an error next to the field.
+* Add and remove structure: `+ add` on arrays (appends an item) and maps (asks for the key), and `×` on a row to
+  remove an array item or map entry.
+* Struct fields that are not in the file show their default value (`0`, empty string, first enum value, `false`, empty
+  struct/array/map), dimmed. Editing one sets it; `×` on a set field unsets it again. Dimmed means "not in the file"; a
+  field you set to the default value is shown at full brightness and is written to the file.
+* Standard VS Code behaviour: unsaved-changes marker on the tab, Save, Save As, undo/redo, revert and hot-exit backup.
+  Saving writes the edited value back in the same format. Save As to another folder rewrites the relative `schema` path.
 
-Opening a non-empty file reads its header, loads the schema it points to (path relative to the file) and shows
-the value as expandable tables (struct / map / array).
+Limitations: map keys cannot be renamed, array items cannot be reordered or duplicated, and
+the schema `option` block is not interpreted.
 
 The schema parser and binary codec in [`disorder/`](disorder) are a JavaScript port of the Go reference
 implementation, and have no dependency on VS Code, so they can be reused on their own.
@@ -120,9 +134,11 @@ bundle in `webview/` is committed, so rebuild it after changing `webview-src/`.
 To package and install a `.vsix`:
 
 ```
-npm run package       # builds the webview, writes disorder-editor.vsix
-npm run install:ext   # package + install into VS Code (needs the `code` CLI)
+./install.sh          # npm ci, tests, build, pack disorder-editor-<version>.vsix, install into VS Code
 ```
+
+The script finds the `code` CLI on `PATH` or in `/Applications/Visual Studio Code.app`; set `CODE_CLI` to override.
+`npm run package` only builds the `.vsix`.
 
 `.vscodeignore` keeps tests and webview sources out of the package; only `js-yaml` is shipped from
 `node_modules` (build tools such as `vue` and `@vue/cli` are dev dependencies).
@@ -138,10 +154,9 @@ Layout:
 
 ## Roadmap
 
-* editing in the data grid (it is read-only today)
-* fetch edited data from the webview when saving (`EditorProvider.getFileData` is a stub)
-* undo/redo, revert and backup for real edits
+* rename map keys, reorder / duplicate array items
+* interpret the schema `option` block
 
 ## License
 
-GPL-3.0, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).

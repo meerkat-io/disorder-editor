@@ -262,3 +262,5 @@ td.key:hover .icon-btn.del, .icon-btn.del:focus-visible { opacity: 1; }
 .time-input { min-width: 0; color-scheme: light dark; }
 .tz { opacity: 0.6; font-size: 0.85em; }
 .time-edit .icon-btn { margin-left: 0; }
+
+.text-area { font-family: inherit; resize: vertical; min-width: 24em; line-height: 1.4; white-space: pre; }

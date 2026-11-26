@@ -28,7 +28,11 @@ class EditorProvider {
 		/**
 		 * @type {vscode.EventEmitter<vscode.CustomDocumentEditEvent<Document>>}
 		 */
-		this.onDidChange = new vscode.EventEmitter();
+		this.emitter = new vscode.EventEmitter();
+		/**
+		 * VS Code listens to this exact name: it drives the dirty marker and undo/redo.
+		 */
+		this.onDidChangeCustomDocument = this.emitter.event;
 		/**
 		 * @type {Map<number, (response: any) => void>}
 		 */
@@ -63,7 +67,7 @@ class EditorProvider {
 
 		const listeners = [];
 		listeners.push(doc.onDidChange.event(e => {
-			this.onDidChange.fire({
+			this.emitter.fire({
 				document: doc,
 				undo: e.undo,
 				redo: e.redo,

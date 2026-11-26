@@ -4,6 +4,7 @@ const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
 const { Disorder } = require('../disorder/disorder')
+const { toView, rootType, emptyRoot } = require('../disorder/view')
 
 /**
  * @public
@@ -78,8 +79,8 @@ class EditorProvider {
 		listeners.push(doc.onDidChange.event(e => {
 			this.onDidChange.fire({
 				document: doc,
-				undo: e.redo,
-				redo: e.undo,
+				undo: e.undo,
+				redo: e.redo,
 			});
 		}));
 
@@ -268,49 +269,41 @@ class EditorProvider {
 	 * @private
 	 */
 	onMessage(webviewPanel, document, message) {
-		console.log("receive data in editor:", message)
 		switch (message.command) {
 			case 'ready':
-				//const editable = vscode.workspace.fs.isWritableFileSystem(document.uri.scheme);
 				if (document.documentData.length === 0) {
-					this.postMessage(webviewPanel, 'select_schema', "empty");
+					this.postMessage(webviewPanel, 'select_schema', 'empty');
+					return;
 				}
-				/* else show datagrid // try catch
-				this.postMessage(webviewPanel, 'init', {
-					value: document.documentData,
-					editable,
-				});*/
-				return;
-
-			case 'schema':
-				const schemaPath = message.body;
 				try {
-					const messages = document.loadSchema(schemaPath);
-					if (messages.length === 0) {
-						this.postMessage(webviewPanel, 'select_schema', "invalid");
-					} else {
-						this.postMessage(webviewPanel, 'select_message', messages);
-					}
+					this.postMessage(webviewPanel, 'show_datagrid', document.openExisting());
 				} catch (error) {
-					this.postMessage(webviewPanel, 'select_schema', "invalid");
+					vscode.window.showErrorMessage(`Cannot open ${path.basename(document.uri.fsPath)}: ${error.message}`);
+					this.postMessage(webviewPanel, 'show_error', error.message);
 				}
 				return;
 
-			case 'message':
-				// save document data
-				const header = new Map();
-				const relativePath = path.relative(document.uri.path, document.schemaPath);
-				header.set("schema", relativePath);
-				header.set("message", message.body.message);
-				header.set("container", message.body.container);
-				const type = document.schema.getMessage(message.body.message);
-				Disorder.write(header, type, new Map(), document.uri.path);
+			case 'pick_schema':
+				return this.pickSchema(webviewPanel, document);
+
+			case 'message': {
+				const { message: name, container } = message.body;
+				const header = new Map([
+					['schema', path.relative(path.dirname(document.uri.fsPath), document.schemaPath)],
+					['message', name],
+					['container', container],
+				]);
+				const type = rootType(document.schema, name, container);
+				const value = emptyRoot(container);
+				Disorder.write(header, type, value, document.uri.fsPath);
 				this.postMessage(webviewPanel, 'show_datagrid', {
-					schema: document.schema,
-					message: message.body.message,
-					containe: message.body.container,
+					message: name,
+					container,
+					schemaPath: document.schemaPath,
+					root: toView(value, type),
 				});
 				return;
+			}
 
 			case 'edit':
 				document.edit(message.body);
@@ -318,6 +311,33 @@ class EditorProvider {
 		}
 	}
 	//#endregion
+
+	/**
+	 * @param {vscode.WebviewPanel} webviewPanel
+	 * @param {Document} document
+	 * @private
+	 */
+	async pickSchema(webviewPanel, document) {
+		const files = await vscode.window.showOpenDialog({
+			canSelectMany: false,
+			defaultUri: vscode.Uri.joinPath(document.uri, '..'),
+			filters: { 'Disorder schema': ['yaml', 'yml'] },
+			openLabel: 'Select schema',
+		});
+		if (!files || files.length === 0) {
+			return;
+		}
+		try {
+			const messages = document.loadSchema(files[0].fsPath);
+			if (messages.length === 0) {
+				throw new Error('schema defines no messages');
+			}
+			this.postMessage(webviewPanel, 'select_message', messages);
+		} catch (error) {
+			vscode.window.showErrorMessage(`Invalid schema: ${error.message}`);
+			this.postMessage(webviewPanel, 'select_schema', 'invalid');
+		}
+	}
 }
 
 module.exports = { EditorProvider }

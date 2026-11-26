@@ -1,9 +1,13 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 const vscode = require('vscode')
-const { EditorProvider } = require('./editor')
 const { Edit } = require('./edit');
+const path = require('path');
 const { Schema } = require('../disorder/schema');
+const { Disorder } = require('../disorder/disorder');
+const { toView, rootType } = require('../disorder/view');
+
+/** @typedef {import('./editor').EditorProvider} EditorProvider */
 
 /**
  * @public
@@ -97,12 +101,37 @@ class Document {
 	}
 
 	/**
-	 * @param {string} path
+	 * Decodes the existing file content: header, schema (relative to the file) and value.
+	 *
+	 * @returns {{message: string, container: string, schemaPath: string, root: object}}
+	 */
+	openExisting() {
+		const { header, value } = Disorder.decode(this.documentData);
+		const get = name => {
+			const v = header.get(name);
+			if (typeof v !== 'string' || v === '') {
+				throw new Error(`file header has no "${name}"`);
+			}
+			return v;
+		};
+		const message = get('message');
+		const container = get('container');
+		this.loadSchema(path.resolve(path.dirname(this.uri.fsPath), get('schema')));
+		const type = rootType(this.schema, message, container);
+		return { message, container, schemaPath: this.schemaPath, root: toView(value, type) };
+	}
+
+	/**
+	 * @param {string} schemaPath
 	 * @returns {string[]}
-	 */ 
-	loadSchema(path) {
-		this.schemaPath = path;
-		return this.schema.load(path);
+	 */
+	loadSchema(schemaPath) {
+		// Use a fresh Schema so a failed or earlier load cannot leak into this one.
+		const schema = new Schema();
+		const messages = schema.load(schemaPath);
+		this.schema = schema;
+		this.schemaPath = schemaPath;
+		return messages;
 	}
 
 	dispose() {
@@ -153,10 +182,9 @@ class Document {
 	 * @returns {Promise<void>}
 	 */
 	async readFile() {
-		if (this.uri.scheme === 'untitled') {
-			this.documentData = new Uint8Array();
-		}
-		this.documentData = new Uint8Array(await vscode.workspace.fs.readFile(this.uri));
+		this.documentData = this.uri.scheme === 'untitled'
+			? new Uint8Array()
+			: new Uint8Array(await vscode.workspace.fs.readFile(this.uri));
 	}
 
 	/**
@@ -187,7 +215,7 @@ class Document {
 	 */
 	async revert(_cancellation) {
 		await this.readFile();
-		this.edits = this.savedEdits;
+		this.edits = Array.from(this.savedEdits);
 		this.onDidChangeDocument.fire({
 			content: this.documentData,
 			edits: this.edits,

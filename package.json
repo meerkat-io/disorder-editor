@@ -3,7 +3,12 @@
   "displayName": "Disorder Editor",
   "description": "Disorder data editor",
   "version": "0.0.1",
-  "publisher": "meerkat.io",
+  "publisher": "meerkat-io",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/meerkat-io/disorder-editor.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -37,7 +42,9 @@
     "test": "jest",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "vscode:prepublish": "npm run build"
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package --out disorder-editor.vsix",
+    "install:ext": "npm run package && code --install-extension disorder-editor.vsix --force"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -45,6 +52,7 @@
     "@types/vscode": "^1.85.0",
     "@vscode/test-cli": "^0.0.4",
     "@vscode/test-electron": "^2.3.8",
+    "@vue/cli": "^5.0.8",
     "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-service": "^5.0.8",
     "@vue/compiler-sfc": "^3.4.31",
@@ -53,12 +61,11 @@
     "eslint-plugin-jsdoc": "^48.0.2",
     "eslint-plugin-vue": "^9.27.0",
     "jest": "^29.7.0",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "vue": "^3.4.31"
   },
   "dependencies": {
-    "@vue/cli": "^5.0.8",
-    "js-yaml": "^4.1.0",
-    "vue": "^3.4.31"
+    "js-yaml": "^4.1.0"
   },
   "eslintConfig": {
     "root": true,

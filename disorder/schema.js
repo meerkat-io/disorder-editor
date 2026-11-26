@@ -101,6 +101,7 @@ class Type {
  */
 class Schema {
     static SCHEMA_NAME = 'disorder';
+    static TOP_LEVEL_KEYS = ['schema', 'version', 'package', 'import', 'option', 'messages', 'enums'];
 
     constructor() {
         /**
@@ -147,7 +148,7 @@ class Schema {
      */
     load(filePath) {
         const messages = this.parse(path.resolve(filePath));
-        this.resovle();
+        this.resolve();
         return messages;
     }
 
@@ -166,15 +167,22 @@ class Schema {
      * @returns {string[]}
      */
     parse(filePath) {
-        console.log(`Loading schema ${filePath}`);
         if (this.processedFiles.has(filePath)) {
-            return;
+            return [];
         }
         this.processedFiles.add(filePath);
 
         const file = this.loadYaml(filePath);
+        if (!isObject(file)) {
+            throw new Error(`Schema ${filePath} is not a ${Schema.SCHEMA_NAME} schema`);
+        }
         if (!file.schema || file.schema !== Schema.SCHEMA_NAME) {
             throw new Error(`Schema ${filePath} is not a ${Schema.SCHEMA_NAME} schema`);
+        }
+        for (const key of Object.keys(file)) {
+            if (!Schema.TOP_LEVEL_KEYS.includes(key)) {
+                throw new Error(`Schema ${filePath} has unknown key "${key}"`);
+            }
         }
 
         if (!file.package) {
@@ -190,7 +198,7 @@ class Schema {
          */
         const messages = [];
         if (file.messages) {
-            if (!(typeof file.messages === 'object')) {
+            if (!isObject(file.messages)) {
                 throw new Error(`Schema ${filePath} messages must be a map`);
             }
 
@@ -206,25 +214,16 @@ class Schema {
                 /**
                  * @type {Map<string, string>}
                  */
-                const fields = file.messages[messageName];
-                if (!(typeof fields === 'object')) {
+                const fields = file.messages[messageName] ?? {};
+                if (!isObject(fields)) {
                     throw new Error(`Schema ${filePath} message "${messageName}" fields must be a map`);
                 }
-                /**
-                 * @type {Set<string>}
-                 */
-                const fieldsSet = new Set();
                 const struct = new Type(Type.STRUCT);
                 for (const fieldName of Object.keys(fields)) {
                     if (!validateSimpleName(fieldName) || Type.isReserved(fieldName)) {
                         throw new Error(`Schema ${filePath} message ${messageName} field name "${fieldName}" is invalid`);
                     }
-                    if (fieldsSet.has(fieldName)) {
-                        throw new Error(`Schema ${filePath} message ${messageName} field name "${fieldName}" is duplicated`);
-                    }
-                    const fieldType = fields[fieldName];
-                    struct.fields.set(fieldName, new Type(fieldType));
-                    fieldsSet.add(fieldName);
+                    struct.fields.set(fieldName, new Type(fields[fieldName]));
                 }
                 this.messages.set(qualifiedName, struct);
                 if (!this.packageMessages.has(packageName)) {
@@ -236,7 +235,7 @@ class Schema {
         }
 
         if (file.enums) {
-            if (!(typeof file.enums === 'object')) {
+            if (!isObject(file.enums)) {
                 throw new Error(`Schema ${filePath} enums must be a map`);
             }
 
@@ -253,7 +252,7 @@ class Schema {
                  * @type {string[]}
                  */
                 const enums = file.enums[enumName];
-                if (!(typeof enums === 'object' && enums instanceof Array)) {
+                if (!Array.isArray(enums)) {
                     throw new Error(`Schema ${filePath} enum "${enumName}" values must be an array`);
                 }
                 /**
@@ -291,7 +290,7 @@ class Schema {
     /**
      * @private
      */
-    resovle() {
+    resolve() {
         for (const [packageName, messages] of this.packageMessages.entries()) {
             for (const message of messages) {
                 for (const fieldType of message.fields.values()) {
@@ -299,7 +298,8 @@ class Schema {
                     while (type.type === Type.ARRAY || type.type === Type.MAP) {
                         type = type.reference;
                     }
-                    if (!Type.isPrimary(type.type)) {
+                    // Skip primary types and references resolved by a previous load().
+                    if (!Type.isPrimary(type.type) && !type.reference) {
                         let qualified = type.type;
                         if (!qualified.includes('.')) {
                             qualified = `${packageName}.${qualified}`;
@@ -311,7 +311,7 @@ class Schema {
                             type.type = Type.STRUCT_REFERENCE;
                             type.reference = this.messages.get(qualified);
                         } else {
-                            throw new Error(`Type "${type.reference}" is not defined`);
+                            throw new Error(`Type "${qualified}" is not defined`);
                         }
                     }
                 }
@@ -326,12 +326,21 @@ class Schema {
  * @property {string} [version]
  * @property {string} [package]
  * @property {string[]} [import]
+ * @property {Object<string, string>} [option]
  * @property {Map<string, Map<string, string>>} [messages]
  * @property {Map<string, string[]>} [enums]
  */
 
 const simpleName = new RegExp(`^[a-zA-Z_][a-zA-Z_0-9]*$`);
-const qualifiedName = new RegExp(`^[a-zA-Z_][a-zA-Z_0-9]*(.[a-zA-Z_][a-zA-Z_0-9]*)*$`);
+const qualifiedName = new RegExp(`^[a-zA-Z_][a-zA-Z_0-9]*(\\.[a-zA-Z_][a-zA-Z_0-9]*)*$`);
+
+/**
+ * @param {any} value
+ * @returns {boolean} true for plain objects (not null, not arrays)
+ */
+function isObject(value) {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 /**
  * @param {string} name 

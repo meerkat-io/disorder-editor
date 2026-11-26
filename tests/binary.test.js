@@ -233,3 +233,164 @@ test('read and write loop message', () => {
     const reader = new Reader(writer.bytes);
     assert.deepEqual(reader.read(), loopObject);
 });
+
+describe('ByteArray', () => {
+    test('grows enough for a single write larger than the buffer', () => {
+        const bytes = new ByteArray();
+        const data = new Uint8Array(5000).fill(7);
+        bytes.writeBytes(data);
+        expect(bytes.writeOffset).toBe(5000);
+        expect(bytes.readBytes(5000)).toEqual(data);
+    });
+
+    test('grows from an empty buffer', () => {
+        const bytes = new ByteArray(new Uint8Array(0));
+        bytes.writeInt(42);
+        expect(bytes.readInt()).toBe(42);
+    });
+
+    test('appends after wrapped content and keeps it readable', () => {
+        const bytes = new ByteArray(new Uint8Array([0, 0, 0, 1]));
+        bytes.writeInt(2);
+        expect(bytes.readInt()).toBe(1);
+        expect(bytes.readInt()).toBe(2);
+    });
+
+    test('is big-endian', () => {
+        const bytes = new ByteArray();
+        bytes.writeInt(0x01020304);
+        expect(bytes.toBytes()).toEqual(new Uint8Array([1, 2, 3, 4]));
+    });
+
+    test('throws on reading past the written data, not the padded buffer', () => {
+        const bytes = new ByteArray();
+        bytes.writeByte(1);
+        bytes.readByte();
+        expect(() => bytes.readByte()).toThrow('unexpected EOF');
+        expect(() => bytes.readInt()).toThrow('unexpected EOF');
+    });
+
+    test('toBytes returns only the written bytes', () => {
+        const bytes = new ByteArray();
+        bytes.writeByte(9);
+        expect(bytes.toBytes()).toEqual(new Uint8Array([9]));
+    });
+});
+
+describe('Writer', () => {
+    const roundTrip = (value, type) => {
+        const writer = new Writer();
+        writer.write(value, type);
+        return Reader.fromWriter(writer).read();
+    };
+
+    test('encodes strings by UTF-8 byte length', () => {
+        const text = 'héllo ✓ 日本語 😀';
+        expect(roundTrip(text, new Type(Type.STRING))).toBe(text);
+
+        const writer = new Writer();
+        writer.write('é', new Type(Type.STRING));
+        // tag + int length (2 bytes for é) + payload
+        expect(writer.toBytes()).toEqual(new Uint8Array([11, 0, 0, 0, 2, 0xc3, 0xa9]));
+    });
+
+    test('round-trips an empty string', () => {
+        expect(roundTrip('', new Type(Type.STRING))).toBe('');
+    });
+
+    test('rejects empty map keys like the Go encoder', () => {
+        const writer = new Writer();
+        expect(() => writer.write(new Map([['', 'x']]), new Type('map[string]'))).toThrow('map key cannot be empty');
+    });
+
+    test('writes map keys sorted by UTF-8 bytes, independent of insertion order', () => {
+        const type = new Type('map[int]');
+        const encode = (entries) => {
+            const writer = new Writer();
+            writer.write(new Map(entries), type);
+            return writer.toBytes();
+        };
+        const a = encode([['b', 1], ['a', 2], ['é', 3], ['😀', 4], ['\uffee', 5]]);
+        const b = encode([['😀', 4], ['\uffee', 5], ['é', 3], ['a', 2], ['b', 1]]);
+        expect(a).toEqual(b);
+        // UTF-8 byte order: a, b, é (c3), U+FFEE (ef), 😀 (f0); UTF-16 order would put 😀 before U+FFEE
+        const keys = Array.from(Reader.fromBytes(a).read().keys());
+        expect(keys).toEqual(['a', 'b', 'é', '\uffee', '😀']);
+    });
+
+    test('round-trips values larger than the initial buffer', () => {
+        const big = 'x'.repeat(10000);
+        expect(roundTrip(big, new Type(Type.STRING))).toBe(big);
+        const bytes = new Uint8Array(4096).fill(3);
+        expect(roundTrip(bytes, new Type(Type.BYTES))).toEqual(bytes);
+    });
+
+    test('round-trips 64-bit extremes and timestamps', () => {
+        const long = new Type(Type.LONG);
+        expect(roundTrip(9223372036854775807n, long)).toBe(9223372036854775807n);
+        expect(roundTrip(-9223372036854775808n, long)).toBe(-9223372036854775808n);
+        const date = new Date(-1000);
+        expect(roundTrip(date, new Type(Type.TIMESTAMP))).toEqual(date);
+    });
+
+    test('rejects values of the wrong type or out of range', () => {
+        const writer = new Writer();
+        expect(() => writer.write('1', new Type(Type.INT))).toThrow('not a 32-bit integer');
+        expect(() => writer.write(1.5, new Type(Type.INT))).toThrow('not a 32-bit integer');
+        expect(() => writer.write(2 ** 31, new Type(Type.INT))).toThrow('not a 32-bit integer');
+        expect(() => writer.write(1, new Type(Type.LONG))).toThrow('not a long');
+        expect(() => writer.write(2n ** 63n, new Type(Type.LONG))).toThrow('out of 64-bit range');
+        expect(() => writer.write(1, new Type(Type.BOOL))).toThrow('not a boolean');
+        expect(() => writer.write(new Date(NaN), new Type(Type.TIMESTAMP))).toThrow('invalid Date');
+        expect(() => writer.write({}, new Type('array[int]'))).toThrow('not a array');
+    });
+
+    test('rejects names longer than 255 bytes', () => {
+        const writer = new Writer();
+        const map = new Map([['k'.repeat(256), 'v']]);
+        expect(() => writer.write(map, new Type('map[string]'))).toThrow('name too long');
+    });
+
+    test('omits struct fields that are not set', () => {
+        const schema = new Schema();
+        schema.load('./tests/data/schema.yaml');
+        const type = schema.getMessage('test.sub');
+        expect(roundTrip(new Map(), type)).toEqual(new Map());
+    });
+});
+
+describe('Reader', () => {
+    test('throws on an unknown tag', () => {
+        expect(() => Reader.fromBytes(new Uint8Array([99])).read()).toThrow('unexpected tag 99');
+    });
+
+    test('throws on truncated data', () => {
+        const writer = new Writer();
+        writer.write('hello', new Type(Type.STRING));
+        const truncated = writer.toBytes().slice(0, 6);
+        expect(() => Reader.fromBytes(truncated).read()).toThrow('unexpected EOF');
+        // unterminated array
+        expect(() => Reader.fromBytes(new Uint8Array([21, 2, 0, 0, 0, 1])).read()).toThrow('unexpected EOF');
+    });
+
+    test('throws on a negative length', () => {
+        expect(() => Reader.fromBytes(new Uint8Array([11, 255, 255, 255, 255])).read()).toThrow('invalid length');
+    });
+
+    test('reads nested containers', () => {
+        const type = new Type('map[array[map[int]]]');
+        const value = new Map([['a', [new Map([['x', 1]]), new Map()]], ['b', []]]);
+        const writer = new Writer();
+        writer.write(value, type);
+        expect(Reader.fromWriter(writer).read()).toEqual(value);
+    });
+
+    test('hasMore reflects unread data', () => {
+        const writer = new Writer();
+        writer.write(true, new Type(Type.BOOL));
+        const reader = Reader.fromWriter(writer);
+        expect(reader.hasMore()).toBe(true);
+        reader.read();
+        expect(reader.hasMore()).toBe(false);
+    });
+});

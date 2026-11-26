@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { Type } = require('./schema');
 
 /**
@@ -25,6 +24,25 @@ const Tag = {
     ObjectEnd: 24
 }
 
+const INT_MIN = -(2 ** 31);
+const INT_MAX = 2 ** 31 - 1;
+const LONG_MIN = -(2n ** 63n);
+const LONG_MAX = 2n ** 63n - 1n;
+const MAX_NAME_BYTES = 255;
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+/**
+ * @param {Map<string, any>} map
+ * @returns {Array<[string, any]>} entries ordered by the UTF-8 bytes of their keys
+ */
+function sortedEntries(map) {
+    return Array.from(map.entries(), ([key, element]) => ({ key, element, bytes: encoder.encode(key) }))
+        .sort((a, b) => Buffer.compare(a.bytes, b.bytes))
+        .map(({ key, element }) => [key, element]);
+}
+
 const TypeTag = new Map([
     [Type.BOOL, Tag.Bool],
     [Type.INT, Tag.Int],
@@ -47,77 +65,60 @@ const TypeTag = new Map([
 ]);
 
 /**
+ * Growable big-endian byte buffer with independent read and write cursors.
+ *
  * @public
  * @property {Uint8Array} buffer
  * @property {number} readOffset
  * @property {number} writeOffset
- * @property {Float32Array} f32
- * @property {Uint8Array} f32Bytes
- * @property {Float64Array} f64
- * @property {Uint8Array} f64Bytes
- * @property {boolean} floatLE
  */
 class ByteArray {
+    static INITIAL_CAPACITY = 1024;
+
     /**
-     * @param {Uint8Array | undefined} buffer
+     * @param {Uint8Array | undefined} buffer existing content to read from (appending is allowed)
      */
     constructor(buffer = undefined) {
         /**
          * @type {Uint8Array}
          */
-        this.buffer = buffer;
+        this.buffer = buffer || new Uint8Array(ByteArray.INITIAL_CAPACITY);
         /**
          * @type {number}
-         * @private
          */
         this.readOffset = 0;
         /**
          * @type {number}
+         */
+        this.writeOffset = buffer ? buffer.length : 0;
+        /**
+         * @type {DataView}
          * @private
          */
-        this.writeOffset = 0;
-        if (this.buffer) {
-            this.writeOffset = this.buffer.length;
-        } else {
-            this.buffer = new Uint8Array(1024);
-        }
+        this.view = this.createView();
+    }
 
-        /**
-         * @type {Float32Array}
-         * @private
-         */
-        this.f32 = new Float32Array([-0]);
-        /**
-         * @type {Uint8Array}
-         * @private
-         */
-        this.f32Bytes = new Uint8Array(this.f32.buffer);
-        /**
-         * @type {Float64Array}
-         * @private
-         */
-        this.f64 = new Float64Array([-0]);
-        /**
-         * @type {Uint8Array}
-         * @private
-         */
-        this.f64Bytes = new Uint8Array(this.f64.buffer);
+    /**
+     * The bytes written so far (a view, not a copy).
+     * @returns {Uint8Array}
+     */
+    toBytes() {
+        return this.buffer.subarray(0, this.writeOffset);
+    }
 
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this.floatLE = this.f32Bytes[3] === 128;
+    /**
+     * Number of bytes written but not yet read.
+     * @returns {number}
+     */
+    get remaining() {
+        return this.writeOffset - this.readOffset;
     }
 
     /**
      * @returns {boolean}
      */
     readBoolean() {
-        this.checkReadOffset(1);
-        const value = this.buffer[this.readOffset] !== 0;
-        this.readOffset += 1;
-        return value;
+        return this.readByte() !== 0;
     }
 
     /**
@@ -125,13 +126,11 @@ class ByteArray {
      */
     readByte() {
         this.checkReadOffset(1);
-        const value = this.buffer[this.readOffset];
-        this.readOffset += 1;
-        return value;
+        return this.buffer[this.readOffset++];
     }
 
     /**
-     * @param {number} length 
+     * @param {number} length
      * @returns {Uint8Array}
      */
     readBytes(length) {
@@ -146,10 +145,7 @@ class ByteArray {
      */
     readInt() {
         this.checkReadOffset(4);
-        const value = this.buffer[this.readOffset] << 24
-            | this.buffer[this.readOffset + 1] << 16
-            | this.buffer[this.readOffset + 2] << 8
-            | this.buffer[this.readOffset + 3];
+        const value = this.view.getInt32(this.readOffset);
         this.readOffset += 4;
         return value;
     }
@@ -159,9 +155,9 @@ class ByteArray {
      */
     readLong() {
         this.checkReadOffset(8);
-        let high = BigInt.asUintN(32, BigInt(this.readInt()));
-        let low = BigInt.asUintN(32, BigInt(this.readInt()));
-        return BigInt.asIntN(64, (high << 32n) | low);
+        const value = this.view.getBigInt64(this.readOffset);
+        this.readOffset += 8;
+        return value;
     }
 
     /**
@@ -169,19 +165,9 @@ class ByteArray {
      */
     readFloat() {
         this.checkReadOffset(4);
-        if (this.floatLE) {
-            this.f32Bytes[3] = this.buffer[this.readOffset];
-            this.f32Bytes[2] = this.buffer[this.readOffset + 1];
-            this.f32Bytes[1] = this.buffer[this.readOffset + 2];
-            this.f32Bytes[0] = this.buffer[this.readOffset + 3];
-        } else {
-            this.f32Bytes[0] = this.buffer[this.readOffset];
-            this.f32Bytes[1] = this.buffer[this.readOffset + 1];
-            this.f32Bytes[2] = this.buffer[this.readOffset + 2];
-            this.f32Bytes[3] = this.buffer[this.readOffset + 3];
-        }
+        const value = this.view.getFloat32(this.readOffset);
         this.readOffset += 4;
-        return this.f32[0];
+        return value;
     }
 
     /**
@@ -189,38 +175,16 @@ class ByteArray {
      */
     readDouble() {
         this.checkReadOffset(8);
-        if (this.floatLE) {
-            this.f64Bytes[7] = this.buffer[this.readOffset];
-            this.f64Bytes[6] = this.buffer[this.readOffset + 1];
-            this.f64Bytes[5] = this.buffer[this.readOffset + 2];
-            this.f64Bytes[4] = this.buffer[this.readOffset + 3];
-            this.f64Bytes[3] = this.buffer[this.readOffset + 4];
-            this.f64Bytes[2] = this.buffer[this.readOffset + 5];
-            this.f64Bytes[1] = this.buffer[this.readOffset + 6];
-            this.f64Bytes[0] = this.buffer[this.readOffset + 7];
-        } else {
-            this.f64Bytes[0] = this.buffer[this.readOffset];
-            this.f64Bytes[1] = this.buffer[this.readOffset + 1];
-            this.f64Bytes[2] = this.buffer[this.readOffset + 2];
-            this.f64Bytes[3] = this.buffer[this.readOffset + 3];
-            this.f64Bytes[4] = this.buffer[this.readOffset + 4];
-            this.f64Bytes[5] = this.buffer[this.readOffset + 5];
-            this.f64Bytes[6] = this.buffer[this.readOffset + 6];
-            this.f64Bytes[7] = this.buffer[this.readOffset + 7];
-        }
+        const value = this.view.getFloat64(this.readOffset);
         this.readOffset += 8;
-        return this.f64[0];
+        return value;
     }
-
 
     /**
      * @param {boolean} value
      */
     writeBoolean(value) {
-        this.checkWriteCapacity(1);
-        this.buffer[this.writeOffset] = value ? 1 : 0;
-        this.writeOffset += 1;
-        return value;
+        this.writeByte(value ? 1 : 0);
     }
 
     /**
@@ -228,8 +192,7 @@ class ByteArray {
      */
     writeByte(value) {
         this.checkWriteCapacity(1);
-        this.buffer[this.writeOffset] = value >>> 0;
-        this.writeOffset += 1;
+        this.buffer[this.writeOffset++] = value;
     }
 
     /**
@@ -246,10 +209,7 @@ class ByteArray {
      */
     writeInt(value) {
         this.checkWriteCapacity(4);
-        this.buffer[this.writeOffset] = value >>> 24;
-        this.buffer[this.writeOffset + 1] = value >>> 16 & 255;
-        this.buffer[this.writeOffset + 2] = value >>> 8 & 255;
-        this.buffer[this.writeOffset + 3] = value & 255;
+        this.view.setInt32(this.writeOffset, value);
         this.writeOffset += 4;
     }
 
@@ -258,10 +218,8 @@ class ByteArray {
      */
     writeLong(value) {
         this.checkWriteCapacity(8);
-        let high = (value >> 32n) & 0xffffffffn;
-        let low = value & 0xffffffffn;
-        this.writeInt(Number(high));
-        this.writeInt(Number(low));
+        this.view.setBigInt64(this.writeOffset, value);
+        this.writeOffset += 8;
     }
 
     /**
@@ -269,18 +227,7 @@ class ByteArray {
      */
     writeFloat(value) {
         this.checkWriteCapacity(4);
-        this.f32[0] = value;
-        if (this.floatLE) {
-            this.buffer[this.writeOffset] = this.f32Bytes[3];
-            this.buffer[this.writeOffset + 1] = this.f32Bytes[2];
-            this.buffer[this.writeOffset + 2] = this.f32Bytes[1];
-            this.buffer[this.writeOffset + 3] = this.f32Bytes[0];
-        } else {
-            this.buffer[this.writeOffset] = this.f32Bytes[0];
-            this.buffer[this.writeOffset + 1] = this.f32Bytes[1];
-            this.buffer[this.writeOffset + 2] = this.f32Bytes[2];
-            this.buffer[this.writeOffset + 3] = this.f32Bytes[3];
-        }
+        this.view.setFloat32(this.writeOffset, value);
         this.writeOffset += 4;
     }
 
@@ -289,49 +236,45 @@ class ByteArray {
      */
     writeDouble(value) {
         this.checkWriteCapacity(8);
-        this.f64[0] = value;
-        if (this.floatLE) {
-            this.buffer[this.writeOffset] = this.f64Bytes[7];
-            this.buffer[this.writeOffset + 1] = this.f64Bytes[6];
-            this.buffer[this.writeOffset + 2] = this.f64Bytes[5];
-            this.buffer[this.writeOffset + 3] = this.f64Bytes[4];
-            this.buffer[this.writeOffset + 4] = this.f64Bytes[3];
-            this.buffer[this.writeOffset + 5] = this.f64Bytes[2];
-            this.buffer[this.writeOffset + 6] = this.f64Bytes[1];
-            this.buffer[this.writeOffset + 7] = this.f64Bytes[0];
-        } else {
-            this.buffer[this.writeOffset] = this.f64Bytes[0];
-            this.buffer[this.writeOffset + 1] = this.f64Bytes[1];
-            this.buffer[this.writeOffset + 2] = this.f64Bytes[2];
-            this.buffer[this.writeOffset + 3] = this.f64Bytes[3];
-            this.buffer[this.writeOffset + 4] = this.f64Bytes[4];
-            this.buffer[this.writeOffset + 5] = this.f64Bytes[5];
-            this.buffer[this.writeOffset + 6] = this.f64Bytes[6];
-            this.buffer[this.writeOffset + 7] = this.f64Bytes[7];
-        }
+        this.view.setFloat64(this.writeOffset, value);
         this.writeOffset += 8;
     }
 
     /**
      * @private
-     * @param {number} contentLength 
+     * @returns {DataView}
+     */
+    createView() {
+        return new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
+    }
+
+    /**
+     * @private
+     * @param {number} contentLength
      */
     checkReadOffset(contentLength) {
-        if (this.readOffset + contentLength > this.buffer.length) {
+        if (this.readOffset + contentLength > this.writeOffset) {
             throw new Error('unexpected EOF');
         }
     }
 
     /**
      * @private
-     * @param {number} contentLength 
+     * @param {number} contentLength
      */
     checkWriteCapacity(contentLength) {
-        if (this.writeOffset + contentLength > this.buffer.length) {
-            const buffer = new Uint8Array(this.buffer.length * 2);
-            buffer.set(this.buffer);
-            this.buffer = buffer;
+        const required = this.writeOffset + contentLength;
+        if (required <= this.buffer.length) {
+            return;
         }
+        let capacity = Math.max(this.buffer.length, 1);
+        while (capacity < required) {
+            capacity *= 2;
+        }
+        const buffer = new Uint8Array(capacity);
+        buffer.set(this.buffer.subarray(0, this.writeOffset));
+        this.buffer = buffer;
+        this.view = this.createView();
     }
 }
 
@@ -341,11 +284,18 @@ class ByteArray {
  */
 class Reader {
     /**
+     * @returns {boolean} true if there is unread data
+     */
+    hasMore() {
+        return this.bytes.remaining > 0;
+    }
+
+    /**
      * @param {Writer} writer 
      * @returns 
      */
     static fromWriter(writer) {
-        return new Reader(writer.bytes);
+        return Reader.fromBytes(writer.toBytes());
     }
 
     /**
@@ -371,10 +321,9 @@ class Reader {
      * @returns {any}
      */
     read(tag = undefined) {
-        tag = tag || this.readTag();
-
-        let length = 0;
-        let elementTag = Tag.Undefined;
+        if (tag === undefined) {
+            tag = this.readTag();
+        }
         switch (tag) {
             case Tag.Bool:
                 return this.bytes.readBoolean();
@@ -392,40 +341,33 @@ class Reader {
                 return this.bytes.readDouble();
 
             case Tag.Bytes:
-                length = this.bytes.readInt();
-                return this.bytes.readBytes(length);
+                return this.bytes.readBytes(this.readLength());
 
             case Tag.String:
-                length = this.bytes.readInt();
-                const bytes = this.bytes.readBytes(length);
-                return new TextDecoder().decode(bytes);
+                return decoder.decode(this.bytes.readBytes(this.readLength()));
 
             case Tag.Timestamp:
-                const milliseconds = this.bytes.readLong();
-                return new Date(Number(milliseconds));
+                return new Date(Number(this.bytes.readLong()));
 
             case Tag.Enum:
                 return this.readName();
 
-            case Tag.ArrayStart:
-                const array = new Array();
-                elementTag = this.readTag();
-                while (elementTag !== Tag.ArrayEnd) {
+            case Tag.ArrayStart: {
+                const array = [];
+                for (let elementTag = this.readTag(); elementTag !== Tag.ArrayEnd; elementTag = this.readTag()) {
                     array.push(this.read(elementTag));
-                    elementTag = this.readTag();
                 }
                 return array;
+            }
 
-            case Tag.ObjectStart:
+            case Tag.ObjectStart: {
                 const map = new Map();
-                elementTag = this.readTag();
-                while (elementTag !== Tag.ObjectEnd) {
+                for (let elementTag = this.readTag(); elementTag !== Tag.ObjectEnd; elementTag = this.readTag()) {
                     const key = this.readName();
-                    const value = this.read(elementTag);
-                    map.set(key, value);
-                    elementTag = this.readTag();
+                    map.set(key, this.read(elementTag));
                 }
                 return map;
+            }
 
             default:
                 throw new Error(`unexpected tag ${tag}`);
@@ -438,8 +380,19 @@ class Reader {
      */
     readName() {
         const length = this.bytes.readByte();
-        const bytes = this.bytes.readBytes(length);
-        return new TextDecoder().decode(bytes);
+        return decoder.decode(this.bytes.readBytes(length));
+    }
+
+    /**
+     * @private
+     * @returns {number}
+     */
+    readLength() {
+        const length = this.bytes.readInt();
+        if (length < 0) {
+            throw new Error(`invalid length ${length}`);
+        }
+        return length;
     }
 
     /**
@@ -474,7 +427,7 @@ class Writer {
             throw new Error(`unsupported type ${type.type}`);
         }
         this.writeTag(TypeTag.get(type.type));
-        if (name) {
+        if (name !== undefined) {
             this.writeName(name);
         }
         switch (type.type) {
@@ -486,8 +439,8 @@ class Writer {
                 break;
 
             case Type.INT:
-                if (typeof value !== 'number') {
-                    throw new Error(`value ${value} is not a integer`);
+                if (!Number.isInteger(value) || value < INT_MIN || value > INT_MAX) {
+                    throw new Error(`value ${value} is not a 32-bit integer`);
                 }
                 this.bytes.writeInt(value);
                 break;
@@ -495,6 +448,9 @@ class Writer {
             case Type.LONG:
                 if (typeof value !== 'bigint') {
                     throw new Error(`value ${value} is not a long (bigint)`);
+                }
+                if (value < LONG_MIN || value > LONG_MAX) {
+                    throw new Error(`value ${value} is out of 64-bit range`);
                 }
                 this.bytes.writeLong(value);
                 break;
@@ -517,21 +473,22 @@ class Writer {
                 if (!(value instanceof Uint8Array)) {
                     throw new Error(`value ${value} is not a bytes (Uint8Array)`);
                 }
-                this.bytes.writeInt(value.length);
-                this.bytes.writeBytes(value);
+                this.writeBlob(value);
                 break;
 
             case Type.STRING:
                 if (typeof value !== 'string') {
                     throw new Error(`value ${value} is not a string`);
                 }
-                this.bytes.writeInt(value.length);
-                this.bytes.writeBytes(new TextEncoder().encode(value));
+                this.writeBlob(encoder.encode(value));
                 break;
 
             case Type.TIMESTAMP:
                 if (!(value instanceof Date)) {
                     throw new Error(`value ${value} is not a timestamp (Date)`);
+                }
+                if (Number.isNaN(value.getTime())) {
+                    throw new Error('timestamp is an invalid Date');
                 }
                 this.bytes.writeLong(BigInt(value.getTime()));
                 break;
@@ -562,7 +519,11 @@ class Writer {
                 if (!(value instanceof Map)) {
                     throw new Error(`value ${value} is not a map`);
                 }
-                for (const [key, element] of value.entries()) {
+                // Sorted by UTF-8 bytes so output is canonical (same as the Go encoder).
+                for (const [key, element] of sortedEntries(value)) {
+                    if (key === '') {
+                        throw new Error('map key cannot be empty');
+                    }
                     this.write(element, type.reference, key);
                 }
                 this.writeTag(Tag.ObjectEnd);
@@ -583,8 +544,24 @@ class Writer {
                 break;
 
             default:
-                throw new Error(`unsupported type ${type}`);
+                throw new Error(`unsupported type ${type.type}`);
         }
+    }
+
+    /**
+     * @returns {Uint8Array} the bytes written so far
+     */
+    toBytes() {
+        return this.bytes.toBytes();
+    }
+
+    /**
+     * @private
+     * @param {Uint8Array} bytes
+     */
+    writeBlob(bytes) {
+        this.bytes.writeInt(bytes.length);
+        this.bytes.writeBytes(bytes);
     }
 
     /**
@@ -592,8 +569,8 @@ class Writer {
      * @param {string} name 
      */
     writeName(name) {
-        const bytes = new TextEncoder().encode(name);
-        if (bytes.length > 255) {
+        const bytes = encoder.encode(name);
+        if (bytes.length > MAX_NAME_BYTES) {
             throw new Error('name too long');
         }
         this.bytes.writeByte(bytes.length);

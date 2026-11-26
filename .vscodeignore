@@ -1,0 +1,12 @@
+.vscode/**
+.vscode-test/**
+.github/**
+tests/**
+webview-src/**
+.eslintrc.json
+jsconfig.json
+vue.config.js
+vsc-extension-quickstart.md
+package-lock.json
+**/*.map
+**/.DS_Store

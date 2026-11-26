@@ -24,15 +24,20 @@
         "displayName": "Disorder Data Editor",
         "selector": [
           {
-            "filenamePattern": "*.disorder"
+            "filenamePattern": "*.dbin"
+          },
+          {
+            "filenamePattern": "*.djson"
           }
         ]
       }
     ],
-    "commands": [
+    "languages": [
       {
-        "command": "disorder-editor.hey",
-        "title": "How are you"
+        "id": "json",
+        "extensions": [
+          ".djson"
+        ]
       }
     ]
   },

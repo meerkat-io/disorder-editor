@@ -1,0 +1,5 @@
+{
+  // The JS debugger's network view hits a Node 22 inspector bug ("Missing dataLength in event")
+  // that can crash the extension host of the Extension Development Host.
+  "debug.javascript.enableNetworkView": false
+}

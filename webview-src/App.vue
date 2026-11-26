@@ -14,7 +14,7 @@ const schemaMessages = ref([])
 const grid = ref(null)
 const error = ref('')
 
-onMounted(window.addEventListener('message', (event) => receiveMessage(event.data)))
+onMounted(() => window.addEventListener('message', (event) => receiveMessage(event.data)))
 
 function receiveMessage(message) {
   console.log('receiveMessage', message)
@@ -50,9 +50,18 @@ vscode.postMessage({ command: 'ready' })
     @select="() => vscode.postMessage({ command: 'pick_schema' })" :status="schemaStatus" />
   <message-selector v-else-if="currentView == messageView"
     @select="(message) => vscode.postMessage({ command: 'message', body: message })" :messages="schemaMessages" />
-  <template v-else-if="currentView == datagridView">
-    <div class="header">{{ grid.message }} ({{ grid.container }}) &mdash; {{ grid.schemaPath }}</div>
-    <cell :node="grid.root" :expanded="true" />
-  </template>
-  <p v-else-if="currentView == errorView">Cannot open file: {{ error }}</p>
+  <div v-else-if="currentView == datagridView" class="grid-page">
+    <div class="header">
+      <span class="title">{{ grid.message }}</span>
+      <span class="badge" :class="grid.container === 'array' ? 'array' : 'object'">{{ grid.container }}</span>
+      <span class="schema" :title="grid.schemaPath">{{ grid.schemaPath }}</span>
+    </div>
+    <div class="grid-body">
+      <cell :node="grid.root" :expanded="true" />
+    </div>
+  </div>
+  <div v-else-if="currentView == errorView" class="wizard">
+    <h2>Cannot open file</h2>
+    <p class="hint error">{{ error }}</p>
+  </div>
 </template>

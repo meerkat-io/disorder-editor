@@ -10,7 +10,7 @@ const open = ref(props.expanded)
 </script>
 
 <template>
-  <span v-if="!node || node.t === 'empty'" class="value null">&nbsp;</span>
+  <span v-if="!node || node.t === 'empty'" class="v-empty">&mdash;</span>
 
   <template v-else-if="node.t === 'struct'">
     <span class="collapsed">
@@ -21,8 +21,8 @@ const open = ref(props.expanded)
       <thead><tr><th>field</th><th>value</th></tr></thead>
       <tbody>
         <tr v-for="field in node.fields" :key="field.key">
-          <td class="member">{{ field.key }}</td>
-          <td class="value"><Cell :node="field.node" /></td>
+          <td class="key">{{ field.key }}</td>
+          <td class="val"><Cell :node="field.node" /></td>
         </tr>
       </tbody>
     </table>
@@ -37,8 +37,8 @@ const open = ref(props.expanded)
       <thead><tr><th>key</th><th>value</th></tr></thead>
       <tbody>
         <tr v-for="entry in node.entries" :key="entry.key">
-          <td class="member">{{ entry.key }}</td>
-          <td class="value"><Cell :node="entry.node" /></td>
+          <td class="key">{{ entry.key }}</td>
+          <td class="val"><Cell :node="entry.node" /></td>
         </tr>
       </tbody>
     </table>
@@ -53,12 +53,12 @@ const open = ref(props.expanded)
       <thead><tr><th></th><th>value</th></tr></thead>
       <tbody>
         <tr v-for="(item, index) in node.items" :key="index">
-          <td class="member">{{ index }}</td>
-          <td class="value"><Cell :node="item" /></td>
+          <td class="key">{{ index }}</td>
+          <td class="val"><Cell :node="item" /></td>
         </tr>
       </tbody>
     </table>
   </template>
 
-  <span v-else :class="['value', node.t === 'string' || node.t === 'enum' || node.t === 'timestamp' ? 'string' : node.t === 'bool' ? 'boolean' : 'number']">{{ String(node.v) }}</span>
+  <span v-else :class="'v-' + node.t">{{ String(node.v) }}</span>
 </template>

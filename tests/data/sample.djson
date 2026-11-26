@@ -1,0 +1,12 @@
+{
+  "schema": "schema.yaml",
+  "message": "test.data",
+  "container": "none",
+  "data": {
+    "number_data": 42,
+    "string_data": "hello",
+    "bool_data": true,
+    "color_data": "red",
+    "time_data": "2024-01-02T03:04:05.678Z"
+  }
+}

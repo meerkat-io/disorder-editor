@@ -3,7 +3,6 @@
 const vscode = require('vscode')
 const path = require('path')
 const { Document } = require('./document')
-const { Disorder } = require('../disorder/disorder')
 const { toView, rootType, emptyRoot } = require('../disorder/view')
 
 /**
@@ -56,13 +55,9 @@ class EditorProvider {
 	 * @param {Document} doc 
 	 */
 	async getFileData(doc) {
-		const webviewsForDocument = Array.from(this.getWebviews(doc.uri));
-		if (!webviewsForDocument.length) {
-			throw new Error('Could not find webview to save for');
-		}
-		const panel = webviewsForDocument[0];
-		const response = await this.postMessage(panel, 'file', {});
-		return new Uint8Array(response);
+		//TODO: ask the webview for the edited data. Until the grid is editable the
+		// document content is unchanged, so write it back as is (never an empty file).
+		return doc.documentData;
 	}
 
 	//#region CustomEditorProvider
@@ -268,7 +263,22 @@ class EditorProvider {
 	 * @param {{command: string, body: any}} message 
 	 * @private
 	 */
-	onMessage(webviewPanel, document, message) {
+	async onMessage(webviewPanel, document, message) {
+		try {
+			await this.handleMessage(webviewPanel, document, message);
+		} catch (error) {
+			vscode.window.showErrorMessage(`Disorder editor error: ${error.message}`);
+			this.postMessage(webviewPanel, 'show_error', error.message);
+		}
+	}
+
+	/**
+	 * @param {vscode.WebviewPanel} webviewPanel
+	 * @param {Document} document
+	 * @param {{command: string, body: any}} message
+	 * @private
+	 */
+	async handleMessage(webviewPanel, document, message) {
 		switch (message.command) {
 			case 'ready':
 				if (document.documentData.length === 0) {
@@ -287,21 +297,31 @@ class EditorProvider {
 				return this.pickSchema(webviewPanel, document);
 
 			case 'message': {
-				const { message: name, container } = message.body;
-				const header = new Map([
-					['schema', path.relative(path.dirname(document.uri.fsPath), document.schemaPath)],
-					['message', name],
-					['container', container],
-				]);
-				const type = rootType(document.schema, name, container);
-				const value = emptyRoot(container);
-				Disorder.write(header, type, value, document.uri.fsPath);
-				this.postMessage(webviewPanel, 'show_datagrid', {
-					message: name,
-					container,
-					schemaPath: document.schemaPath,
-					root: toView(value, type),
-				});
+				try {
+					const { message: name, container } = message.body;
+					if (!document.schemaPath) {
+						throw new Error('no schema selected');
+					}
+					const header = new Map([
+						['schema', path.relative(path.dirname(document.uri.fsPath), document.schemaPath)],
+						['message', name],
+						['container', container],
+					]);
+					const type = rootType(document.schema, name, container);
+					const value = emptyRoot(container);
+					const bytes = document.encode(header, type, value);
+					await vscode.workspace.fs.writeFile(document.uri, bytes);
+					document.documentData = bytes;
+					this.postMessage(webviewPanel, 'show_datagrid', {
+						message: name,
+						container,
+						schemaPath: document.schemaPath,
+						root: toView(value, type),
+					});
+				} catch (error) {
+					vscode.window.showErrorMessage(`Cannot create file: ${error.message}`);
+					this.postMessage(webviewPanel, 'show_error', error.message);
+				}
 				return;
 			}
 

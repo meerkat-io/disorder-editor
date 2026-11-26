@@ -60,7 +60,7 @@ describe('files', () => {
     });
 
     test('write then read', () => {
-        const file = path.join(dir, 'data.disorder');
+        const file = path.join(dir, 'data.dbin');
         Disorder.write(header, type, value, file);
         expect(fs.statSync(file).size).toBe(Disorder.encode(header, type, value).length);
 
@@ -70,6 +70,6 @@ describe('files', () => {
     });
 
     test('read throws for a missing file', () => {
-        expect(() => Disorder.read(path.join(dir, 'missing.disorder'))).toThrow();
+        expect(() => Disorder.read(path.join(dir, 'missing.dbin'))).toThrow();
     });
 });

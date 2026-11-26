@@ -5,6 +5,7 @@ const { Edit } = require('./edit');
 const path = require('path');
 const { Schema } = require('../disorder/schema');
 const { Disorder } = require('../disorder/disorder');
+const { DisorderJson } = require('../disorder/json');
 const { toView, rootType } = require('../disorder/view');
 
 /** @typedef {import('./editor').EditorProvider} EditorProvider */
@@ -106,7 +107,16 @@ class Document {
 	 * @returns {{message: string, container: string, schemaPath: string, root: object}}
 	 */
 	openExisting() {
-		const { header, value } = Disorder.decode(this.documentData);
+		let header, read;
+		if (this.isJson) {
+			const parsed = DisorderJson.parse(this.documentData);
+			header = parsed.header;
+			read = type => DisorderJson.toValue(parsed.data, type);
+		} else {
+			const decoded = Disorder.decode(this.documentData);
+			header = decoded.header;
+			read = () => decoded.value;
+		}
 		const get = name => {
 			const v = header.get(name);
 			if (typeof v !== 'string' || v === '') {
@@ -116,9 +126,30 @@ class Document {
 		};
 		const message = get('message');
 		const container = get('container');
-		this.loadSchema(path.resolve(path.dirname(this.uri.fsPath), get('schema')));
+		const schema = get('schema');
+		if (path.isAbsolute(schema)) {
+			throw new Error(`schema path "${schema}" must be relative to the file`);
+		}
+		this.loadSchema(path.resolve(path.dirname(this.uri.fsPath), schema));
 		const type = rootType(this.schema, message, container);
-		return { message, container, schemaPath: this.schemaPath, root: toView(value, type) };
+		return { message, container, schemaPath: this.schemaPath, root: toView(read(type), type) };
+	}
+
+	/**
+	 * @returns {boolean} true for `*.djson` files, false for the binary `*.dbin` format
+	 */
+	get isJson() {
+		return this.uri.path.toLowerCase().endsWith('.djson');
+	}
+
+	/**
+	 * @param {Map<string, string>} header
+	 * @param {import('../disorder/schema').Type} type
+	 * @param {any} value
+	 * @returns {Uint8Array} the file content in this document's format
+	 */
+	encode(header, type, value) {
+		return this.isJson ? DisorderJson.encode(header, type, value) : Disorder.encode(header, type, value);
 	}
 
 	/**

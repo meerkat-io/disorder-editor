@@ -1,14 +1,14 @@
 # Disorder Editor
 
-A VS Code custom editor for `*.disorder` files, the binary encoding of
-[Disorder](https://github.com/meerkat-io/disorder), a strongly typed data format described by a yaml schema.
+A VS Code custom editor for [Disorder](https://github.com/meerkat-io/disorder) data files, a strongly typed data format
+described by a yaml schema. Two file types are supported: `*.dbin` (binary) and `*.djson` (JSON).
 
-> **Status: work in progress.** The editor can create a new `.disorder` file from a schema and open existing
+> **Status: work in progress.** The editor can create a new `.dbin` file from a schema and open existing
 > ones in a read-only data grid. Editing and saving edited data are not implemented yet (see [Roadmap](#roadmap)).
 
 ## What works today
 
-Opening an empty `*.disorder` file shows a small wizard:
+Opening an empty `*.dbin` file shows a small wizard:
 
 1. pick a schema file (`.yaml` / `.yml`)
 2. pick the root message type and a container (`none`, `array` or `map`)
@@ -22,7 +22,7 @@ implementation, and have no dependency on VS Code, so they can be reused on thei
 
 ## File layout
 
-A `.disorder` file is a header followed by one value, both in the Disorder binary encoding:
+A `.dbin` file is a header followed by one value, both in the Disorder binary encoding:
 
 | part   | type          | content                                                                                  |
 | ------ | ------------- | ---------------------------------------------------------------------------------------- |
@@ -30,6 +30,25 @@ A `.disorder` file is a header followed by one value, both in the Disorder binar
 | value  | root type     | the data, written with the same tags as the header                                       |
 
 The value is self-describing (every item carries a tag), so it can be read without the schema.
+
+## JSON files (`*.djson`)
+
+The JSON flavour carries the same header as the binary one, followed by the data. It is not self-describing, so it
+can only be read together with its schema, which must be a path relative to the file:
+
+```json
+{
+  "schema": "schema.yaml",
+  "message": "test.data",
+  "container": "none",
+  "data": { "number_data": 42, "string_data": "hello" }
+}
+```
+
+`long` is a decimal string (JS numbers lose precision above 2^53), `bytes` is base64, `timestamp` is ISO 8601, and
+struct/map are both objects (the schema tells them apart). Unknown keys, unknown struct fields and values that do not
+match the schema are rejected with the location of the problem (for example `data.items[2].count: expected a 32-bit int`).
+If a file, its schema or its data is invalid, the editor shows the error in the page and as a notification.
 
 ## Binary format
 
@@ -74,7 +93,7 @@ const copy = Reader.fromWriter(writer).read();
 // whole files: header + value
 const bytes = Disorder.encode(new Map([['message', 'test.data']]), type, value);
 const { header, value: decoded } = Disorder.decode(bytes);
-Disorder.write(header, type, value, 'out.disorder'); // Disorder.read('out.disorder') reads it back
+Disorder.write(header, type, value, 'out.dbin'); // Disorder.read('out.dbin') reads it back
 ```
 
 Notes:
@@ -95,7 +114,7 @@ npm run build     # bundle the webview (vue-cli) into webview/
 ```
 
 To try the extension, open this folder in VS Code and press `F5` (the "Run Extension" launch config builds the
-webview first and starts an Extension Development Host), then open or create a `*.disorder` file. The webview
+webview first and starts an Extension Development Host), then open or create a `*.dbin` file. The webview
 bundle in `webview/` is committed, so rebuild it after changing `webview-src/`.
 
 To package and install a `.vsix`:

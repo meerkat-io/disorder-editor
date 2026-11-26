@@ -60,7 +60,7 @@ describe('rootType / emptyRoot', () => {
 });
 
 test('the sample file is readable', () => {
-    const { header, value } = Disorder.read(path.join(__dirname, 'data', 'sample.disorder'));
+    const { header, value } = Disorder.read(path.join(__dirname, 'data', 'sample.dbin'));
     const type = rootType(schema, header.get('message'), header.get('container'));
     expect(toView(value, type).t).toBe('struct');
 });
